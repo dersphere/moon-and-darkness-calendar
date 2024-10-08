@@ -125,7 +125,7 @@
         }
 
         .weekend-night {
-            background-color: rgba(0, 255, 0, 0.1); /* Slightly greener background for weekend nights */
+            background-color: rgba(0, 255, 0, 0.1);
         }
 
         .bars-container {
@@ -178,15 +178,6 @@
         .hour-label:nth-child(12n+1) {
             font-weight: bold;
             color: rgba(255, 255, 255, 0.9);
-        }
-
-        .bars-container {
-            position: relative;
-            height: 50px;
-        }
-
-        .darkness-segment, .moon-segment {
-            position: relative;
         }
 
         .darkness-segment:hover::after, .moon-segment:hover::after {
@@ -452,7 +443,7 @@
                 const dayRight = document.createElement('div');
                 dayRight.className = 'day-right';
                 const nextDay = date.clone().add(1, 'day');
-                if (nextDay.day() === 6 || nextDay.day() === 1) { // Saturday or Sunday
+                if (nextDay.day() === 6 || nextDay.day() === 0) { // Saturday or Sunday
                     dayRight.classList.add('weekend-night');
                 }
                 dayRight.innerHTML = `
