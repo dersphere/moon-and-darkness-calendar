@@ -113,15 +113,19 @@
             padding: 10px;
             border-radius: 5px;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-width: 80px;
         }
 
-        .day-left {
-            justify-content: flex-end;
+        .day-of-week {
+            font-size: 0.8em;
+            opacity: 0.8;
         }
 
-        .day-right {
-            justify-content: flex-start;
+        .weekend-night {
+            background-color: rgba(0, 255, 0, 0.1); /* Slightly greener background for weekend nights */
         }
 
         .bars-container {
@@ -421,7 +425,13 @@
 
                 const dayLeft = document.createElement('div');
                 dayLeft.className = 'day-left';
-                dayLeft.innerText = date.format('MMM D');
+                if (date.day() === 5 || date.day() === 6) { // Friday or Saturday
+                    dayLeft.classList.add('weekend-night');
+                }
+                dayLeft.innerHTML = `
+                    <span>${date.format('MMM D')}</span>
+                    <span class="day-of-week">${date.format('ddd')}</span>
+                `;
                 dayRow.appendChild(dayLeft);
 
                 const barsContainer = document.createElement('div');
@@ -441,7 +451,14 @@
 
                 const dayRight = document.createElement('div');
                 dayRight.className = 'day-right';
-                dayRight.innerText = date.clone().add(1, 'day').format('MMM D');
+                const nextDay = date.clone().add(1, 'day');
+                if (nextDay.day() === 6 || nextDay.day() === 1) { // Saturday or Sunday
+                    dayRight.classList.add('weekend-night');
+                }
+                dayRight.innerHTML = `
+                    <span>${nextDay.format('MMM D')}</span>
+                    <span class="day-of-week">${nextDay.format('ddd')}</span>
+                `;
                 dayRow.appendChild(dayRight);
 
                 calendarView.appendChild(dayRow);
