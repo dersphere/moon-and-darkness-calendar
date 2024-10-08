@@ -126,43 +126,6 @@
         .moon-segment[data-visible="true"] { background-color: rgba(192, 192, 192, 0.7); }
         .moon-segment[data-visible="false"] { background-color: rgba(64, 64, 64, 0.3); }
 
-        .legend-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .legend {
-            flex: 1;
-            display: flex;
-            justify-content: space-between;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .legend div {
-            width: 11.11%; /* 100% / 9 divisions */
-            text-align: center;
-            font-size: 0.8em;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        @media (max-width: 768px) {
-            #app {
-                width: 95%;
-                padding: 20px;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            #calendar-view {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .hour-labels-row {
             display: contents;
         }
@@ -353,6 +316,7 @@
             // Add empty div for left alignment
             const emptyLeft = document.createElement('div');
             emptyLeft.className = 'day-left';
+            emptyLeft.style.visibility = 'hidden';
             hourLabelsRow.appendChild(emptyLeft);
 
             const labelsContainer = document.createElement('div');
@@ -371,6 +335,7 @@
             // Add empty div for right alignment
             const emptyRight = document.createElement('div');
             emptyRight.className = 'day-right';
+            emptyRight.style.visibility = 'hidden';
             hourLabelsRow.appendChild(emptyRight);
 
             return hourLabelsRow;
