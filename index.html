@@ -7,19 +7,10 @@
     <style>
         :root {
             --bg-gradient-start: #0f2027;
-            --bg-gradient-middle: #203a43;
-            --bg-gradient-end: #2c5364;
             --text-color: #fff;
             --accent-color: #ffd700;
             --input-bg-color: rgba(255, 255, 255, 0.2);
             --calendar-bg-color: rgba(255, 255, 255, 0.1);
-            --darkness-astronomical: rgba(0, 0, 51, 0.9);
-            --darkness-nautical: rgba(0, 0, 102, 0.8);
-            --darkness-civil: rgba(0, 102, 204, 0.7);
-            --darkness-below: rgba(51, 153, 255, 0.6);
-            --darkness-day: rgba(255, 255, 153, 0.5);
-            --moon-visible: rgba(192, 192, 192, 0.7);
-            --moon-not-visible: rgba(64, 64, 64, 0.3);
         }
 
         body {
@@ -27,7 +18,7 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background: linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-middle), var(--bg-gradient-end));
+            background: linear-gradient(to bottom, var(--bg-gradient-start), #203a43, #2c5364);
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -135,14 +126,14 @@
 
         .darkness-segment, .moon-segment { height: 100%; }
 
-        .darkness-segment[data-level="astronomical"] { background-color: var(--darkness-astronomical); }
-        .darkness-segment[data-level="nautical"] { background-color: var(--darkness-nautical); }
-        .darkness-segment[data-level="civil"] { background-color: var(--darkness-civil); }
-        .darkness-segment[data-level="below"] { background-color: var(--darkness-below); }
-        .darkness-segment[data-level="day"] { background-color: var(--darkness-day); }
+        .darkness-segment[data-level="astronomical"] { background-color: rgba(0, 0, 51, 0.9); }
+        .darkness-segment[data-level="nautical"] { background-color: rgba(0, 0, 102, 0.8); }
+        .darkness-segment[data-level="civil"] { background-color: rgba(0, 102, 204, 0.7); }
+        .darkness-segment[data-level="below"] { background-color: rgba(51, 153, 255, 0.6); }
+        .darkness-segment[data-level="day"] { background-color: rgba(255, 255, 153, 0.5); }
 
-        .moon-segment[data-visible="true"] { background-color: var(--moon-visible); }
-        .moon-segment[data-visible="false"] { background-color: var(--moon-not-visible); }
+        .moon-segment[data-visible="true"] { background-color: rgba(192, 192, 192, 0.7); }
+        .moon-segment[data-visible="false"] { background-color: rgba(64, 64, 64, 0.3); }
 
         .hour-labels-row { display: contents; }
 
