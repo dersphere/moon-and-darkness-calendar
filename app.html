@@ -65,10 +65,6 @@
             gap: 10px;
         }
 
-        #num-days {
-            width: 80px;
-        }
-
         input, button {
             padding: 10px;
             border: none;
@@ -103,9 +99,7 @@
             border-radius: 10px;
         }
 
-        .day-row {
-            display: contents;
-        }
+        .day-row { display: contents; }
 
         .day-left, .day-right {
             font-weight: bold;
@@ -124,9 +118,7 @@
             opacity: 0.8;
         }
 
-        .weekend-night {
-            background-color: rgba(0, 255, 0, 0.1);
-        }
+        .weekend-night { background-color: rgba(0, 255, 0, 0.1); }
 
         .bars-container {
             display: flex;
@@ -141,9 +133,7 @@
             overflow: hidden;
         }
 
-        .darkness-segment {
-            height: 100%;
-        }
+        .darkness-segment, .moon-segment { height: 100%; }
 
         .darkness-segment[data-level="astronomical"] { background-color: var(--darkness-astronomical); }
         .darkness-segment[data-level="nautical"] { background-color: var(--darkness-nautical); }
@@ -151,16 +141,10 @@
         .darkness-segment[data-level="below"] { background-color: var(--darkness-below); }
         .darkness-segment[data-level="day"] { background-color: var(--darkness-day); }
 
-        .moon-segment {
-            height: 100%;
-        }
-
         .moon-segment[data-visible="true"] { background-color: var(--moon-visible); }
         .moon-segment[data-visible="false"] { background-color: var(--moon-not-visible); }
 
-        .hour-labels-row {
-            display: contents;
-        }
+        .hour-labels-row { display: contents; }
 
         .hour-labels-container {
             display: flex;
@@ -223,11 +207,9 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
     <script type="module">
+        const $ = (selector) => document.querySelector(selector);
         const getUrlParams = () => new URLSearchParams(window.location.search);
-
-        const setUrlParams = (params) => {
-            window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
-        };
+        const setUrlParams = (params) => window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
 
         const formatDate = (date, format) => {
             const options = {
@@ -246,7 +228,7 @@
         };
 
         const searchLocation = async () => {
-            const location = document.getElementById('location').value;
+            const location = $('#location').value;
             if (!location) {
                 alert('Please enter a location.');
                 return;
@@ -257,8 +239,7 @@
                 const data = await response.json();
                 if (data.length > 0) {
                     const { lat, lon } = data[0];
-                    const params = new URLSearchParams({ lat, lon });
-                    setUrlParams(params);
+                    setUrlParams(new URLSearchParams({ lat, lon }));
                     generateCalendar();
                 } else {
                     alert('Location not found.');
@@ -273,8 +254,7 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const { latitude, longitude } = position.coords;
-                    const params = new URLSearchParams({ lat: latitude, lon: longitude });
-                    setUrlParams(params);
+                    setUrlParams(new URLSearchParams({ lat: latitude, lon: longitude }));
                     generateCalendar();
                 }, (error) => {
                     console.error('Error getting geolocation:', error);
@@ -300,8 +280,7 @@
             for (let hour = 12; hour < 36; hour++) {
                 const label = document.createElement('div');
                 label.className = 'hour-label';
-                const displayHour = hour % 24;
-                label.textContent = `${displayHour.toString().padStart(2, '0')}:00`;
+                label.textContent = `${(hour % 24).toString().padStart(2, '0')}:00`;
                 labelsContainer.appendChild(label);
             }
 
@@ -331,96 +310,51 @@
             return moonPosition.altitude > 0;
         };
 
-        const setDarknessBar = (darknessBar, date, lat, lon) => {
-            const startTime = new Date(date);
-            const endTime = addDays(startTime, 1);
-            let currentTime = new Date(startTime);
-            let currentDarkness = getDarknessLevel(currentTime, lat, lon);
-            let segmentStart = new Date(currentTime);
-
-            while (currentTime < endTime) {
-                const newDarkness = getDarknessLevel(currentTime, lat, lon);
-
-                if (newDarkness !== currentDarkness) {
-                    const segmentWidth = `${(currentTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
-
-                    const darknessSegment = document.createElement('div');
-                    darknessSegment.className = 'darkness-segment';
-                    darknessSegment.style.width = segmentWidth;
-                    darknessSegment.dataset.level = currentDarkness;
-                    darknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(currentTime, 'HH:mm:ss')}`;
-                    darknessBar.appendChild(darknessSegment);
-
-                    segmentStart = new Date(currentTime);
-                    currentDarkness = newDarkness;
-                }
-                currentTime.setMinutes(currentTime.getMinutes() + 5);
-            }
-
-            const finalSegmentWidth = `${(endTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
-
-            const finalDarknessSegment = document.createElement('div');
-            finalDarknessSegment.className = 'darkness-segment';
-            finalDarknessSegment.style.width = finalSegmentWidth;
-            finalDarknessSegment.dataset.level = currentDarkness;
-            finalDarknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(endTime, 'HH:mm:ss')}`;
-            darknessBar.appendChild(finalDarknessSegment);
+        const createSegment = (start, end, isVisible, type) => {
+            const segment = document.createElement('div');
+            segment.className = `${type}-segment`;
+            segment.style.width = `${(end - start) / (24 * 60 * 60 * 1000) * 100}%`;
+            segment.dataset[type === 'darkness' ? 'level' : 'visible'] = isVisible;
+            segment.title = `${type === 'darkness' ? isVisible.charAt(0).toUpperCase() + isVisible.slice(1) : `Moon ${isVisible ? 'visible' : 'not visible'}`} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}`;
+            return segment;
         };
 
-        const setMoonBar = (moonBar, date, lat, lon) => {
+        const setBar = (bar, date, lat, lon, type) => {
             const startTime = new Date(date);
             const endTime = addDays(startTime, 1);
             let currentTime = new Date(startTime);
-            let currentMoonVisible = isMoonVisible(currentTime, lat, lon);
+            let currentState = type === 'darkness' ? getDarknessLevel(currentTime, lat, lon) : isMoonVisible(currentTime, lat, lon);
             let segmentStart = new Date(currentTime);
 
             while (currentTime < endTime) {
-                const newMoonVisible = isMoonVisible(currentTime, lat, lon);
+                const newState = type === 'darkness' ? getDarknessLevel(currentTime, lat, lon) : isMoonVisible(currentTime, lat, lon);
 
-                if (newMoonVisible !== currentMoonVisible) {
-                    const segmentWidth = `${(currentTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
-
-                    const moonSegment = document.createElement('div');
-                    moonSegment.className = 'moon-segment';
-                    moonSegment.style.width = segmentWidth;
-                    moonSegment.dataset.visible = currentMoonVisible;
-                    moonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(currentTime, 'HH:mm:ss')}`;
-                    moonBar.appendChild(moonSegment);
-
+                if (newState !== currentState) {
+                    bar.appendChild(createSegment(segmentStart, currentTime, currentState, type));
                     segmentStart = new Date(currentTime);
-                    currentMoonVisible = newMoonVisible;
+                    currentState = newState;
                 }
                 currentTime.setMinutes(currentTime.getMinutes() + 5);
             }
 
-            const finalSegmentWidth = `${(endTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
-
-            const finalMoonSegment = document.createElement('div');
-            finalMoonSegment.className = 'moon-segment';
-            finalMoonSegment.style.width = finalSegmentWidth;
-            finalMoonSegment.dataset.visible = currentMoonVisible;
-            finalMoonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(endTime, 'HH:mm:ss')}`;
-            moonBar.appendChild(finalMoonSegment);
+            bar.appendChild(createSegment(segmentStart, endTime, currentState, type));
         };
 
         const generateCalendar = () => {
             const params = getUrlParams();
             const lat = parseFloat(params.get('lat'));
             const lon = parseFloat(params.get('lon'));
-            const startDateInput = document.getElementById('start-date');
-            const startDate = startDateInput.value ? new Date(startDateInput.value) : new Date();
-            const numDays = parseInt(document.getElementById('num-days').value, 10);
+            const startDate = $('#start-date').value ? new Date($('#start-date').value) : new Date();
+            const numDays = parseInt($('#num-days').value, 10);
 
             if (!lat || !lon || isNaN(startDate.getTime()) || isNaN(numDays) || numDays < 1) {
                 alert('Please ensure location is set and all fields are filled correctly.');
                 return;
             }
 
-            const calendarView = document.getElementById('calendar-view');
+            const calendarView = $('#calendar-view');
             calendarView.innerHTML = '';
-
-            const topHourLabels = createHourLabels();
-            calendarView.appendChild(topHourLabels);
+            calendarView.appendChild(createHourLabels());
 
             const start = new Date(startDate);
             start.setHours(12, 0, 0, 0);
@@ -432,13 +366,8 @@
 
                 const dayLeft = document.createElement('div');
                 dayLeft.className = 'day-left';
-                if (date.getDay() === 5 || date.getDay() === 6) { // Friday or Saturday
-                    dayLeft.classList.add('weekend-night');
-                }
-                dayLeft.innerHTML = `
-                    <span>${formatDate(date, 'MMM D')}</span>
-                    <span class="day-of-week">${formatDate(date, 'ddd')}</span>
-                `;
+                if ([5, 6].includes(date.getDay())) dayLeft.classList.add('weekend-night');
+                dayLeft.innerHTML = `<span>${formatDate(date, 'MMM D')}</span><span class="day-of-week">${formatDate(date, 'ddd')}</span>`;
                 dayRow.appendChild(dayLeft);
 
                 const barsContainer = document.createElement('div');
@@ -446,51 +375,40 @@
 
                 const darknessBar = document.createElement('div');
                 darknessBar.className = 'bar darkness-bar';
+                setBar(darknessBar, date, lat, lon, 'darkness');
+
                 const moonBar = document.createElement('div');
                 moonBar.className = 'bar moon-bar';
-
-                setDarknessBar(darknessBar, date, lat, lon);
-                setMoonBar(moonBar, date, lat, lon);
+                setBar(moonBar, date, lat, lon, 'moon');
 
                 barsContainer.appendChild(darknessBar);
                 barsContainer.appendChild(moonBar);
                 dayRow.appendChild(barsContainer);
 
+                const nextDay = addDays(date, 1);
                 const dayRight = document.createElement('div');
                 dayRight.className = 'day-right';
-                const nextDay = addDays(date, 1);
-                if (nextDay.getDay() === 6 || nextDay.getDay() === 0) { // Saturday or Sunday
-                    dayRight.classList.add('weekend-night');
-                }
-                dayRight.innerHTML = `
-                    <span>${formatDate(nextDay, 'MMM D')}</span>
-                    <span class="day-of-week">${formatDate(nextDay, 'ddd')}</span>
-                `;
+                if ([6, 0].includes(nextDay.getDay())) dayRight.classList.add('weekend-night');
+                dayRight.innerHTML = `<span>${formatDate(nextDay, 'MMM D')}</span><span class="day-of-week">${formatDate(nextDay, 'ddd')}</span>`;
                 dayRow.appendChild(dayRight);
 
                 calendarView.appendChild(dayRow);
             }
 
-            const bottomHourLabels = createHourLabels();
-            calendarView.appendChild(bottomHourLabels);
+            calendarView.appendChild(createHourLabels());
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-            document.getElementById('start-date').value = formattedDate;
-            
-            document.getElementById('search-location').addEventListener('click', searchLocation);
-            document.getElementById('use-location').addEventListener('click', useMyLocation);
-            document.getElementById('calendar-form').addEventListener('submit', (e) => {
+            $('#start-date').value = new Date().toISOString().split('T')[0];
+            $('#search-location').addEventListener('click', searchLocation);
+            $('#use-location').addEventListener('click', useMyLocation);
+            $('#calendar-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 generateCalendar();
             });
 
             const params = getUrlParams();
-            const lat = params.get('lat');
-            const lon = params.get('lon');
-            if (lat && lon) {
+            if (params.get('lat') && params.get('lon')) {
                 generateCalendar();
             }
         });
