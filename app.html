@@ -53,9 +53,20 @@
 
         .controls {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
             margin-bottom: 30px;
+        }
+
+        .controls-left, .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #num-days {
+            width: 80px;
         }
 
         input, button {
@@ -196,15 +207,19 @@
         </header>
         <main>
             <form id="calendar-form" class="controls">
-                <label for="location">Location:</label>
-                <input type="text" id="location" placeholder="Enter city name" aria-label="Enter city name">
-                <button type="button" id="search-location">Search</button>
-                <button type="button" id="use-location">Use My Location</button>
-                <label for="start-date">Start Date:</label>
-                <input type="date" id="start-date" aria-label="Start date">
-                <label for="num-days">Number of Days:</label>
-                <input type="number" id="num-days" value="30" min="1" placeholder="Number of days" aria-label="Number of days">
-                <button type="submit">Update</button>
+                <div class="controls-left">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" placeholder="Enter city name" aria-label="Enter city name">
+                    <button type="button" id="search-location">Search</button>
+                    <button type="button" id="use-location">Use My Location</button>
+                </div>
+                <div class="controls-right">
+                    <label for="start-date">Start Date:</label>
+                    <input type="date" id="start-date" aria-label="Start date">
+                    <label for="num-days">Number of Days:</label>
+                    <input type="number" id="num-days" value="30" min="1" max="365" placeholder="Days" aria-label="Number of days">
+                    <button type="submit">Update</button>
+                </div>
             </form>
             <section id="calendar-view" aria-live="polite">
                 <!-- Calendar will be dynamically generated here -->
