@@ -222,13 +222,27 @@
         </main>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
     <script type="module">
         const getUrlParams = () => new URLSearchParams(window.location.search);
 
         const setUrlParams = (params) => {
             window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+        };
+
+        const formatDate = (date, format) => {
+            const options = {
+                'MMM D': { month: 'short', day: 'numeric' },
+                'ddd': { weekday: 'short' },
+                'YYYY-MM-DD': { year: 'numeric', month: '2-digit', day: '2-digit' },
+                'HH:mm:ss': { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }
+            };
+            return new Intl.DateTimeFormat(navigator.language, options[format]).format(date);
+        };
+
+        const addDays = (date, days) => {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
         };
 
         const searchLocation = async () => {
@@ -301,12 +315,28 @@
             return hourLabelsRow;
         };
 
+        const getDarknessLevel = (time, lat, lon) => {
+            const sunPosition = SunCalc.getPosition(time, lat, lon);
+            const altitude = sunPosition.altitude * (180 / Math.PI);
+            
+            if (altitude < -18) return 'astronomical';
+            if (altitude < -12) return 'nautical';
+            if (altitude < -6) return 'civil';
+            if (altitude < 0) return 'below';
+            return 'day';
+        };
+
+        const isMoonVisible = (time, lat, lon) => {
+            const moonPosition = SunCalc.getMoonPosition(time, lat, lon);
+            return moonPosition.altitude > 0;
+        };
+
         const setDarknessBar = (darknessBar, date, lat, lon) => {
-            const startTime = date.clone();
-            const endTime = date.clone().add(1, 'day');
-            let currentTime = startTime.clone();
+            const startTime = new Date(date);
+            const endTime = addDays(startTime, 1);
+            let currentTime = new Date(startTime);
             let currentDarkness = getDarknessLevel(currentTime, lat, lon);
-            let segmentStart = currentTime.clone();
+            let segmentStart = new Date(currentTime);
 
             while (currentTime < endTime) {
                 const newDarkness = getDarknessLevel(currentTime, lat, lon);
@@ -318,13 +348,13 @@
                     darknessSegment.className = 'darkness-segment';
                     darknessSegment.style.width = segmentWidth;
                     darknessSegment.dataset.level = currentDarkness;
-                    darknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${segmentStart.format('HH:mm:ss')} - ${currentTime.format('HH:mm:ss')}`;
+                    darknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(currentTime, 'HH:mm:ss')}`;
                     darknessBar.appendChild(darknessSegment);
 
-                    segmentStart = currentTime.clone();
+                    segmentStart = new Date(currentTime);
                     currentDarkness = newDarkness;
                 }
-                currentTime.add(5, 'minutes');
+                currentTime.setMinutes(currentTime.getMinutes() + 5);
             }
 
             const finalSegmentWidth = `${(endTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
@@ -333,16 +363,16 @@
             finalDarknessSegment.className = 'darkness-segment';
             finalDarknessSegment.style.width = finalSegmentWidth;
             finalDarknessSegment.dataset.level = currentDarkness;
-            finalDarknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${segmentStart.format('HH:mm:ss')} - ${endTime.format('HH:mm:ss')}`;
+            finalDarknessSegment.title = `${currentDarkness.charAt(0).toUpperCase() + currentDarkness.slice(1)} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(endTime, 'HH:mm:ss')}`;
             darknessBar.appendChild(finalDarknessSegment);
         };
 
         const setMoonBar = (moonBar, date, lat, lon) => {
-            const startTime = date.clone();
-            const endTime = date.clone().add(1, 'day');
-            let currentTime = startTime.clone();
+            const startTime = new Date(date);
+            const endTime = addDays(startTime, 1);
+            let currentTime = new Date(startTime);
             let currentMoonVisible = isMoonVisible(currentTime, lat, lon);
-            let segmentStart = currentTime.clone();
+            let segmentStart = new Date(currentTime);
 
             while (currentTime < endTime) {
                 const newMoonVisible = isMoonVisible(currentTime, lat, lon);
@@ -354,13 +384,13 @@
                     moonSegment.className = 'moon-segment';
                     moonSegment.style.width = segmentWidth;
                     moonSegment.dataset.visible = currentMoonVisible;
-                    moonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${segmentStart.format('HH:mm:ss')} - ${currentTime.format('HH:mm:ss')}`;
+                    moonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(currentTime, 'HH:mm:ss')}`;
                     moonBar.appendChild(moonSegment);
 
-                    segmentStart = currentTime.clone();
+                    segmentStart = new Date(currentTime);
                     currentMoonVisible = newMoonVisible;
                 }
-                currentTime.add(5, 'minutes');
+                currentTime.setMinutes(currentTime.getMinutes() + 5);
             }
 
             const finalSegmentWidth = `${(endTime - segmentStart) / (24 * 60 * 60 * 1000) * 100}%`;
@@ -369,34 +399,19 @@
             finalMoonSegment.className = 'moon-segment';
             finalMoonSegment.style.width = finalSegmentWidth;
             finalMoonSegment.dataset.visible = currentMoonVisible;
-            finalMoonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${segmentStart.format('HH:mm:ss')} - ${endTime.format('HH:mm:ss')}`;
+            finalMoonSegment.title = `Moon ${currentMoonVisible ? 'visible' : 'not visible'} ${formatDate(segmentStart, 'HH:mm:ss')} - ${formatDate(endTime, 'HH:mm:ss')}`;
             moonBar.appendChild(finalMoonSegment);
-        };
-
-        const getDarknessLevel = (time, lat, lon) => {
-            const sunPosition = SunCalc.getPosition(time.toDate(), lat, lon);
-            const altitude = sunPosition.altitude * (180 / Math.PI);
-            
-            if (altitude < -18) return 'astronomical';
-            if (altitude < -12) return 'nautical';
-            if (altitude < -6) return 'civil';
-            if (altitude < 0) return 'below';
-            return 'day';
-        };
-
-        const isMoonVisible = (time, lat, lon) => {
-            const moonPosition = SunCalc.getMoonPosition(time.toDate(), lat, lon);
-            return moonPosition.altitude > 0;
         };
 
         const generateCalendar = () => {
             const params = getUrlParams();
             const lat = parseFloat(params.get('lat'));
             const lon = parseFloat(params.get('lon'));
-            const startDate = document.getElementById('start-date').value;
+            const startDateInput = document.getElementById('start-date');
+            const startDate = startDateInput.value ? new Date(startDateInput.value) : new Date();
             const numDays = parseInt(document.getElementById('num-days').value, 10);
 
-            if (!lat || !lon || !startDate || isNaN(numDays) || numDays < 1) {
+            if (!lat || !lon || isNaN(startDate.getTime()) || isNaN(numDays) || numDays < 1) {
                 alert('Please ensure location is set and all fields are filled correctly.');
                 return;
             }
@@ -407,21 +422,22 @@
             const topHourLabels = createHourLabels();
             calendarView.appendChild(topHourLabels);
 
-            const start = moment(startDate).startOf('day').add(12, 'hours');
+            const start = new Date(startDate);
+            start.setHours(12, 0, 0, 0);
 
             for (let day = 0; day < numDays; day++) {
-                const date = start.clone().add(day, 'days');
+                const date = addDays(start, day);
                 const dayRow = document.createElement('div');
                 dayRow.className = 'day-row';
 
                 const dayLeft = document.createElement('div');
                 dayLeft.className = 'day-left';
-                if (date.day() === 5 || date.day() === 6) { // Friday or Saturday
+                if (date.getDay() === 5 || date.getDay() === 6) { // Friday or Saturday
                     dayLeft.classList.add('weekend-night');
                 }
                 dayLeft.innerHTML = `
-                    <span>${date.format('MMM D')}</span>
-                    <span class="day-of-week">${date.format('ddd')}</span>
+                    <span>${formatDate(date, 'MMM D')}</span>
+                    <span class="day-of-week">${formatDate(date, 'ddd')}</span>
                 `;
                 dayRow.appendChild(dayLeft);
 
@@ -442,13 +458,13 @@
 
                 const dayRight = document.createElement('div');
                 dayRight.className = 'day-right';
-                const nextDay = date.clone().add(1, 'day');
-                if (nextDay.day() === 6 || nextDay.day() === 0) { // Saturday or Sunday
+                const nextDay = addDays(date, 1);
+                if (nextDay.getDay() === 6 || nextDay.getDay() === 0) { // Saturday or Sunday
                     dayRight.classList.add('weekend-night');
                 }
                 dayRight.innerHTML = `
-                    <span>${nextDay.format('MMM D')}</span>
-                    <span class="day-of-week">${nextDay.format('ddd')}</span>
+                    <span>${formatDate(nextDay, 'MMM D')}</span>
+                    <span class="day-of-week">${formatDate(nextDay, 'ddd')}</span>
                 `;
                 dayRow.appendChild(dayRight);
 
@@ -460,7 +476,10 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('start-date').value = moment().format('YYYY-MM-DD');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            document.getElementById('start-date').value = formattedDate;
+            
             document.getElementById('search-location').addEventListener('click', searchLocation);
             document.getElementById('use-location').addEventListener('click', useMyLocation);
             document.getElementById('calendar-form').addEventListener('submit', (e) => {
