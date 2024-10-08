@@ -147,21 +147,18 @@
         .hour-labels-row { display: contents; }
 
         .hour-labels-container {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
+            position: relative;
+            left: -6px; /* account for the font-size (half the size should mostly center it) */
+            margin-top: 5px;
         }
 
         .hour-label {
-            font-size: 0.7em;
+            position: absolute;
+            font-size: 12px; /* Hardcode font-size for alignment */
             color: rgba(255, 255, 255, 0.7);
-            transform: rotate(-90deg);
+            transform: translateX(-50%) rotate(-90deg);
+            transform-origin: top center;
             white-space: nowrap;
-        }
-
-        .hour-label:nth-child(12n+1) {
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.9);
         }
 
         .darkness-segment:hover::after, .moon-segment:hover::after {
@@ -277,10 +274,11 @@
             const labelsContainer = document.createElement('div');
             labelsContainer.className = 'hour-labels-container';
 
-            for (let hour = 12; hour < 36; hour++) {
+            for (let hour = 12; hour <= 36; hour++) {
                 const label = document.createElement('div');
                 label.className = 'hour-label';
                 label.textContent = `${(hour % 24).toString().padStart(2, '0')}:00`;
+                label.style.left = `${((hour - 12) / 24) * 100}%`;
                 labelsContainer.appendChild(label);
             }
 
