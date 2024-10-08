@@ -95,7 +95,7 @@
         .day-left, .day-right {
             font-weight: bold;
             background-color: var(--input-bg-color);
-            padding: 10px;
+            padding: 6px;
             border-radius: 5px;
             display: flex;
             flex-direction: column;
@@ -164,6 +164,62 @@
             white-space: nowrap;
             z-index: 1;
             font-size: 0.8em;
+        }
+
+        @media (max-width: 768px) {
+            #app {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-left, .controls-right {
+                min-width: 40px;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+
+            input, button {
+                flex: 1 1 auto;
+            }
+
+            #calendar-view {
+                grid-template-columns: auto 1fr;
+                padding: 10px;
+            }
+
+            .hour-labels-row {
+                display: none;
+            }
+            .day-right {
+                display: none;
+            }
+
+            .hour-labels-container {
+                left: -3px;
+            }
+
+            .hour-label {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            /* .controls-left, .controls-right {
+                flex-direction: column;
+            } */
+
+            input, button {
+                width: 100%;
+            }
         }
     </style>
 </head>
