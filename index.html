@@ -406,7 +406,7 @@
                 else if (phase <= 0.78) phaseName = "Last Quarter";
                 else phaseName = "Waning Crescent";
 
-                segment.title = `Moon ${isVisible ? 'visible' : 'not visible'} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}\n` +
+                segment.title = `Moon rise at ${formatDate(moonTimes.rise, 'HH:mm:ss')} - set at ${formatDate(moonTimes.set, 'HH:mm:ss')}\n` +
                     `Phase: ${phaseName}\n` +
                     `Illumination: ${(moonIllumination.fraction * 100).toFixed(1)}%\n` +
                     `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}`;
