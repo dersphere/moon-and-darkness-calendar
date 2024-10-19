@@ -81,6 +81,7 @@
             background-color: var(--accent-color);
             color: var(--bg-gradient-start);
             transition: all 0.3s ease;
+            text-wrap: nowrap;
         }
 
         button:hover {
@@ -241,21 +242,21 @@
             <h1>Moon and Darkness Calendar</h1>
         </header>
         <main>
-            <form id="calendar-form" class="controls">
-                <div class="controls-left">
+            <div class="controls">
+                <form id="location-form" class="controls-left">
                     <label for="location">Location:</label>
                     <input type="text" id="location" placeholder="Enter city name" aria-label="Enter city name">
-                    <button type="button" id="search-location">Search</button>
+                    <button type="submit">Search</button>
                     <button type="button" id="use-location">Use My Location</button>
-                </div>
-                <div class="controls-right">
+                </form>
+                <form id="date-form" class="controls-right">
                     <label for="start-date">Start Date:</label>
                     <input type="date" id="start-date" aria-label="Start date">
-                    <label for="num-days">Number of Days:</label>
-                    <input type="number" id="num-days" value="30" min="1" max="365" placeholder="Days" aria-label="Number of days">
+                    <label for="num-days">Days:</label>
+                    <input type="number" id="num-days" value="30" min="1" max="365" placeholder="Days" aria-label="Days">
                     <button type="submit">Update</button>
-                </div>
-            </form>
+                </form>
+            </div>
             <section id="calendar-view" aria-live="polite">
                 <h2>Please enter a location or click the "Use My Location" button.</h2>
             </section>
@@ -498,11 +499,14 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             $('#start-date').value = new Date().toISOString().split('T')[0];
-            $('#search-location').addEventListener('click', searchLocation);
             $('#use-location').addEventListener('click', useMyLocation);
-            $('#calendar-form').addEventListener('submit', (e) => {
+            $('#date-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 generateCalendar();
+            });
+            $('#location-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                searchLocation();
             });
 
             const params = getUrlParams();
