@@ -131,7 +131,10 @@
             overflow: hidden;
         }
 
-        .darkness-segment, .moon-segment { height: 100%; }
+        .darkness-segment, .moon-segment {
+            height: 100%;
+            cursor: help; /* This changes the cursor to a question mark */
+        }
 
         .darkness-segment[data-level="astronomical"] { background-color: rgba(0, 0, 51, 0.9); }
         .darkness-segment[data-level="nautical"] { background-color: rgba(0, 0, 102, 0.8); }
