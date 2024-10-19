@@ -376,21 +376,20 @@
             } else {
                 const lat = parseFloat(getUrlParams().get('lat'));
                 const lon = parseFloat(getUrlParams().get('lon'));
-                const moonPosition = SunCalc.getMoonPosition(start, lat, lon);
                 const moonIllumination = SunCalc.getMoonIllumination(start);
                 const moonTimes = SunCalc.getMoonTimes(start, lat, lon);
 
-                // Calculate max elevation and its time
-                let maxElevation = moonPosition.altitude;
-                let maxElevationTime = new Date(start);
-                for (let i = 1; i < 24; i++) {
-                    const hourLater = new Date(start.getTime() + i * 60 * 60 * 1000);
-                    const hourPosition = SunCalc.getMoonPosition(hourLater, lat, lon);
-                    if (hourPosition.altitude > maxElevation) {
-                        maxElevation = hourPosition.altitude;
-                        maxElevationTime = hourLater;
-                    }
+                // Calculate moon positions for the day
+                const moonPositions = [];
+                for (let i = 0; i < 24; i++) {
+                    const time = new Date(start.getTime() + i * 60 * 60 * 1000);
+                    moonPositions.push(SunCalc.getMoonPosition(time, lat, lon));
                 }
+
+                // Find max elevation and its time
+                const maxElevation = Math.max(...moonPositions.map(pos => pos.altitude));
+                const maxElevationIndex = moonPositions.findIndex(pos => pos.altitude === maxElevation);
+                const maxElevationTime = new Date(start.getTime() + maxElevationIndex * 60 * 60 * 1000);
 
                 // Convert max elevation to degrees
                 const maxElevationDegrees = (maxElevation * (180 / Math.PI)).toFixed(1);
@@ -410,9 +409,7 @@
                 segment.title = `Moon ${isVisible ? 'visible' : 'not visible'} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}\n` +
                     `Phase: ${phaseName}\n` +
                     `Illumination: ${(moonIllumination.fraction * 100).toFixed(1)}%\n` +
-                    `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}\n` +
-                    `Moonrise: ${moonTimes.rise ? formatDate(moonTimes.rise, 'HH:mm:ss') : 'N/A'}\n` +
-                    `Moonset: ${moonTimes.set ? formatDate(moonTimes.set, 'HH:mm:ss') : 'N/A'}`;
+                    `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}`;
             }
             return segment;
         };
