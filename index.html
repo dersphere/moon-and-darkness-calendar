@@ -370,7 +370,50 @@
             segment.className = `${type}-segment`;
             segment.style.width = `${(end - start) / (24 * 60 * 60 * 1000) * 100}%`;
             segment.dataset[type === 'darkness' ? 'level' : 'visible'] = isVisible;
-            segment.title = `${type === 'darkness' ? isVisible.charAt(0).toUpperCase() + isVisible.slice(1) : `Moon ${isVisible ? 'visible' : 'not visible'}`} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}`;
+
+            if (type === 'darkness') {
+                segment.title = `${isVisible.charAt(0).toUpperCase() + isVisible.slice(1)} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}`;
+            } else {
+                const lat = parseFloat(getUrlParams().get('lat'));
+                const lon = parseFloat(getUrlParams().get('lon'));
+                const moonPosition = SunCalc.getMoonPosition(start, lat, lon);
+                const moonIllumination = SunCalc.getMoonIllumination(start);
+                const moonTimes = SunCalc.getMoonTimes(start, lat, lon);
+
+                // Calculate max elevation and its time
+                let maxElevation = moonPosition.altitude;
+                let maxElevationTime = new Date(start);
+                for (let i = 1; i < 24; i++) {
+                    const hourLater = new Date(start.getTime() + i * 60 * 60 * 1000);
+                    const hourPosition = SunCalc.getMoonPosition(hourLater, lat, lon);
+                    if (hourPosition.altitude > maxElevation) {
+                        maxElevation = hourPosition.altitude;
+                        maxElevationTime = hourLater;
+                    }
+                }
+
+                // Convert max elevation to degrees
+                const maxElevationDegrees = (maxElevation * (180 / Math.PI)).toFixed(1);
+
+                // Determine moon phase
+                const phase = moonIllumination.phase;
+                let phaseName;
+                if (phase <= 0.03 || phase > 0.97) phaseName = "New Moon";
+                else if (phase <= 0.22) phaseName = "Waxing Crescent";
+                else if (phase <= 0.28) phaseName = "First Quarter";
+                else if (phase <= 0.47) phaseName = "Waxing Gibbous";
+                else if (phase <= 0.53) phaseName = "Full Moon";
+                else if (phase <= 0.72) phaseName = "Waning Gibbous";
+                else if (phase <= 0.78) phaseName = "Last Quarter";
+                else phaseName = "Waning Crescent";
+
+                segment.title = `Moon ${isVisible ? 'visible' : 'not visible'} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}\n` +
+                    `Phase: ${phaseName}\n` +
+                    `Illumination: ${(moonIllumination.fraction * 100).toFixed(1)}%\n` +
+                    `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}\n` +
+                    `Moonrise: ${moonTimes.rise ? formatDate(moonTimes.rise, 'HH:mm:ss') : 'N/A'}\n` +
+                    `Moonset: ${moonTimes.set ? formatDate(moonTimes.set, 'HH:mm:ss') : 'N/A'}`;
+            }
             return segment;
         };
 
