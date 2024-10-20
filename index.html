@@ -143,9 +143,6 @@
         .darkness-segment[data-level="below"] { background-color: rgba(51, 153, 255, 0.6); }
         .darkness-segment[data-level="day"] { background-color: rgba(255, 255, 153, 0.5); }
 
-        .moon-segment[data-visible="true"] { background-color: rgba(192, 192, 192, 0.7); }
-        .moon-segment[data-visible="false"] { background-color: rgba(64, 64, 64, 0.3); }
-
         .hour-labels-row { display: contents; }
 
         .hour-labels-container {
@@ -372,9 +369,9 @@
             const segment = document.createElement('div');
             segment.className = `${type}-segment`;
             segment.style.width = `${(end - start) / (24 * 60 * 60 * 1000) * 100}%`;
-            segment.dataset[type === 'darkness' ? 'level' : 'visible'] = isVisible;
-
+            
             if (type === 'darkness') {
+                segment.dataset.level = isVisible;
                 segment.title = `${isVisible.charAt(0).toUpperCase() + isVisible.slice(1)} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}`;
             } else {
                 const lat = parseFloat(getUrlParams().get('lat'));
@@ -408,6 +405,11 @@
                 else if (phase <= 0.72) phaseName = "Waning Gibbous";
                 else if (phase <= 0.78) phaseName = "Last Quarter";
                 else phaseName = "Waning Crescent";
+
+                // Set the background color based on illumination
+                const illumination = moonIllumination.fraction;
+                const c = Math.round(64 + (255 - 64) * illumination);
+                segment.style.backgroundColor = isVisible ? `rgba(${c}, ${c}, ${c}, 1)` : 'rgba(0, 0, 32, 0.8)';
 
                 segment.title = `Moonrise: ${formatDate(moonTimes.rise, 'HH:mm:ss')}\n` +
                     `Moonset: ${formatDate(moonTimes.set, 'HH:mm:ss')}\n` +
