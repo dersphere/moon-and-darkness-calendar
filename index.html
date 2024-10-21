@@ -321,38 +321,17 @@
             return { maxElevationDegrees, maxElevationTime };
         };
 
-        const getMoonPhaseName = (phase) => {
-            if (phase <= 0.03 || phase > 0.97) return "New Moon";
-            if (phase <= 0.22) return "Waxing Crescent";
-            if (phase <= 0.28) return "First Quarter";
-            if (phase <= 0.47) return "Waxing Gibbous";
-            if (phase <= 0.53) return "Full Moon";
-            if (phase <= 0.72) return "Waning Gibbous";
-            if (phase <= 0.78) return "Last Quarter";
-            return "Waning Crescent";
-        };
-
-        const getMoonPhaseEmoji = (phase) => {
-            if (phase <= 0.03 || phase > 0.97) return "🌑"; // New Moon
-            if (phase <= 0.22) return "🌒"; // Waxing Crescent
-            if (phase <= 0.28) return "🌓"; // First Quarter
-            if (phase <= 0.47) return "🌔"; // Waxing Gibbous
-            if (phase <= 0.53) return "🌕"; // Full Moon
-            if (phase <= 0.72) return "🌖"; // Waning Gibbous
-            if (phase <= 0.78) return "🌗"; // Last Quarter
-            return "🌘"; // Waning Crescent
-        };
         const getMoonSegmentColor = (isVisible, illumination) => {
             const c = Math.round(64 + (255 - 64) * illumination);
             return isVisible ? `rgba(${c}, ${c}, ${c}, 1)` : 'rgba(0, 0, 32, 0.8)';
         };
 
-        const formatMoonSegmentTitle = (moonTimes, moonIllumination, maxElevationDegrees, maxElevationTime, phaseName) => {
+        const formatMoonSegmentTitle = (moonTimes, moonIllumination, maxElevationDegrees, maxElevationTime) => {
             return `Moonset: ${formatDate(moonTimes.set, 'HH:mm:ss')}\n` +
                    `Moonrise: ${formatDate(moonTimes.rise, 'HH:mm:ss')}\n` +
                    `Illumination: ${(moonIllumination.fraction * 100).toFixed(1)}%\n` +
                    `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}\n` +
-                   `Phase: ${phaseName}`;
+                   `Phase: ${moonIllumination.phase.name}`;
         };
 
         // Darkness-related functions
@@ -386,10 +365,9 @@
             const moonTimes = SunCalc.getMoonTimes(start, lat, lon);
 
             const { maxElevationDegrees, maxElevationTime } = calculateMoonMaxElevation(start, lat, lon);
-            const phaseName = getMoonPhaseName(moonIllumination.phase);
             
             segment.style.backgroundColor = getMoonSegmentColor(isVisible, moonIllumination.fraction);
-            segment.title = formatMoonSegmentTitle(moonTimes, moonIllumination, maxElevationDegrees, maxElevationTime, phaseName);
+            segment.title = formatMoonSegmentTitle(moonTimes, moonIllumination, maxElevationDegrees, maxElevationTime);
 
             return segment;
         };
@@ -464,7 +442,6 @@
             // Calculate moon information
             const moonIllumination = SunCalc.getMoonIllumination(date);
             const moonTimes = SunCalc.getMoonTimes(date, lat, lon);
-            const moonPhaseEmoji = getMoonPhaseEmoji(moonIllumination.phase);
             
             dayLeft.innerHTML = `
                 <div class="date-info">
@@ -472,7 +449,7 @@
                     <span class="day-of-week">${formatDate(date, 'ddd')}</span>
                 </div>
                 <div class="moon-info">
-                    <span>${moonPhaseEmoji} ${(moonIllumination.fraction * 100).toFixed(0)}%</span>
+                    <span>${moonIllumination.phase.emoji} ${(moonIllumination.fraction * 100).toFixed(0)}%</span>
                     <span>↓ ${moonTimes.set ? formatDate(moonTimes.set, 'HH:mm') : '--:--'}</span>
                     <span>↑ ${moonTimes.rise ? formatDate(moonTimes.rise, 'HH:mm') : '--:--'}</span>
                 </div>
