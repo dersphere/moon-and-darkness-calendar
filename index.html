@@ -123,12 +123,12 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            gap: 5px;
+            gap: 4px;
         }
 
         .bar {
             display: flex;
-            height: 20px;
+            height: 22px;
             overflow: hidden;
         }
 
@@ -222,6 +222,33 @@
                 width: 100%;
             }
         }
+
+        .day-left {
+            background-color: var(--input-bg-color);
+            padding: 6px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: row;
+        }
+
+        .date-info, .moon-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .moon-info {
+            font-size: 0.6em;
+            text-align: right;
+            align-items: flex-end;
+        }
+
+        .day-of-week {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -262,7 +289,8 @@
                 'MMM D': { month: 'short', day: 'numeric' },
                 'ddd': { weekday: 'short' },
                 'YYYY-MM-DD': { year: 'numeric', month: '2-digit', day: '2-digit' },
-                'HH:mm:ss': { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }
+                'HH:mm:ss': { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false },
+                'HH:mm': { hour: '2-digit', minute: '2-digit', hour12: false }
             };
             return new Intl.DateTimeFormat(navigator.language, options[format]).format(date);
         };
@@ -304,14 +332,24 @@
             return "Waning Crescent";
         };
 
+        const getMoonPhaseEmoji = (phase) => {
+            if (phase <= 0.03 || phase > 0.97) return "🌑"; // New Moon
+            if (phase <= 0.22) return "🌒"; // Waxing Crescent
+            if (phase <= 0.28) return "🌓"; // First Quarter
+            if (phase <= 0.47) return "🌔"; // Waxing Gibbous
+            if (phase <= 0.53) return "🌕"; // Full Moon
+            if (phase <= 0.72) return "🌖"; // Waning Gibbous
+            if (phase <= 0.78) return "🌗"; // Last Quarter
+            return "🌘"; // Waning Crescent
+        };
         const getMoonSegmentColor = (isVisible, illumination) => {
             const c = Math.round(64 + (255 - 64) * illumination);
             return isVisible ? `rgba(${c}, ${c}, ${c}, 1)` : 'rgba(0, 0, 32, 0.8)';
         };
 
         const formatMoonSegmentTitle = (moonTimes, moonIllumination, maxElevationDegrees, maxElevationTime, phaseName) => {
-            return `Moonrise: ${formatDate(moonTimes.rise, 'HH:mm:ss')}\n` +
-                   `Moonset: ${formatDate(moonTimes.set, 'HH:mm:ss')}\n` +
+            return `Moonset: ${formatDate(moonTimes.set, 'HH:mm:ss')}\n` +
+                   `Moonrise: ${formatDate(moonTimes.rise, 'HH:mm:ss')}\n` +
                    `Illumination: ${(moonIllumination.fraction * 100).toFixed(1)}%\n` +
                    `Max Elevation: ${maxElevationDegrees}° at ${formatDate(maxElevationTime, 'HH:mm:ss')}\n` +
                    `Phase: ${phaseName}`;
@@ -422,7 +460,23 @@
             const dayLeft = document.createElement('div');
             dayLeft.className = 'day-left';
             if ([5, 6].includes(date.getDay())) dayLeft.classList.add('weekend-night');
-            dayLeft.innerHTML = `<span>${formatDate(date, 'MMM D')}</span><span class="day-of-week">${formatDate(date, 'ddd')}</span>`;
+            
+            // Calculate moon information
+            const moonIllumination = SunCalc.getMoonIllumination(date);
+            const moonTimes = SunCalc.getMoonTimes(date, lat, lon);
+            const moonPhaseEmoji = getMoonPhaseEmoji(moonIllumination.phase);
+            
+            dayLeft.innerHTML = `
+                <div class="date-info">
+                    <span>${formatDate(date, 'MMM D')}</span>
+                    <span class="day-of-week">${formatDate(date, 'ddd')}</span>
+                </div>
+                <div class="moon-info">
+                    <span>${moonPhaseEmoji} ${(moonIllumination.fraction * 100).toFixed(0)}%</span>
+                    <span>↓ ${moonTimes.set ? formatDate(moonTimes.set, 'HH:mm') : '--:--'}</span>
+                    <span>↑ ${moonTimes.rise ? formatDate(moonTimes.rise, 'HH:mm') : '--:--'}</span>
+                </div>
+            `;
             dayRow.appendChild(dayLeft);
 
             const barsContainer = document.createElement('div');
