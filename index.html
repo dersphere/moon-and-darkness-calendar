@@ -87,17 +87,23 @@
             padding: 20px;
             border-radius: 10px;
         }
-        .day-row { display: contents; }
+        .day-row {
+            display: contents;
+            cursor: help;
+        }
         .day-left, .day-right {
             font-weight: bold;
             background-color: var(--input-bg-color);
             padding: 6px;
             border-radius: 5px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-width: 80px;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: row;
+        }
+        .day-right {
+            justify-content: center;
         }
         .day-of-week {
             font-size: 0.8em;
@@ -117,7 +123,6 @@
         }
         .darkness-segment, .moon-segment {
             height: 100%;
-            cursor: help;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -161,15 +166,7 @@
             margin: 4px;
             opacity: 0.6;
             overflow: hidden;
-        }
-        .day-left {
-            background-color: var(--input-bg-color);
-            padding: 6px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-direction: row;
+            display: none;
         }
         .date-info, .moon-info {
             display: flex;
@@ -178,8 +175,9 @@
         }
         .moon-info {
             font-size: 0.6em;
-            text-align: right;
-            align-items: flex-end;
+        }
+        .moon-icon {
+            font-size: 18px;
         }
         .day-of-week {
             font-size: 0.8em;
@@ -224,10 +222,6 @@
                 width: 100%;
             }
         }
-        .inline-indicator {
-            display: none;
-        }
-
         .show-inline-times .inline-indicator,
         .day-row:hover .inline-indicator {
             display: inline;
@@ -321,7 +315,6 @@
             const moonPhaseEmoji = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.emoji : moonIlluminationRight.phase.emoji;
             const moonPhaseFraction = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.fraction : moonIlluminationRight.fraction;
             const moonDurationStr = getDurationStr(moonRiseTime, moonSetTime);
-
             const sunRiseTime = isIn(sunTimesLeft.sunriseEnd.value) ? sunTimesLeft.sunriseEnd.value : sunTimesRight.sunriseEnd.value;
             const sunSetTime = isIn(sunTimesLeft.sunsetStart.value) ? sunTimesLeft.sunsetStart.value : sunTimesRight.sunsetStart.value;
             const sunDawnTime = isIn(sunTimesLeft.civilDawn.value) ? sunTimesLeft.civilDawn.value : sunTimesRight.civilDawn.value;
@@ -531,9 +524,8 @@
                     <span class="day-of-week">${formatDate(rowData.startDate, 'ddd')}</span>
                 </div>
                 <div class="moon-info">
-                    <span>${rowData.moonPhaseEmoji} ${(rowData.moonPhaseFraction * 100).toFixed(0)}%</span>
-                    <span>↓ ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm') : '--:--'}</span>
-                    <span>↑ ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm') : '--:--'}</span>
+                    <span class="moon-icon">${rowData.moonPhaseEmoji}</span>
+                    <span>${(rowData.moonPhaseFraction * 100).toFixed(0)}%</span>
                 </div>
             `;
             dayRow.appendChild(dayLeft);
@@ -548,7 +540,12 @@
             const dayRight = document.createElement('div');
             dayRight.className = 'day-right';
             if ([6, 0].includes(rowData.endDate.getDay())) dayRight.classList.add('weekend-night');
-            dayRight.innerHTML = `<span>${formatDate(rowData.endDate, 'MMM D')}</span><span class="day-of-week">${formatDate(rowData.endDate, 'ddd')}</span>`;
+            dayRight.innerHTML = `
+                <div class="date-info">
+                    <span>${formatDate(rowData.endDate, 'MMM D')}</span>
+                    <span class="day-of-week">${formatDate(rowData.endDate, 'ddd')}</span>
+                </div>
+            `;
             dayRow.appendChild(dayRight);
 
             return dayRow;
