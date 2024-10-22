@@ -224,6 +224,18 @@
                 width: 100%;
             }
         }
+        .inline-indicator {
+            display: none;
+        }
+
+        .show-inline-times .inline-indicator,
+        .day-row:hover .inline-indicator {
+            display: inline;
+        }
+
+        #show-inline-times {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -246,6 +258,9 @@
                     <input type="number" id="num-days" value="30" min="1" max="365" placeholder="Days" aria-label="Days">
                     <button type="submit">Update</button>
                 </form>
+                <label for="show-inline-times">
+                    <input type="checkbox" id="show-inline-times"> Show inline times
+                </label>
             </div>
             <section id="calendar-view" aria-live="polite">
                 <h2>Please enter a location or click the "Use My Location" button.</h2>
@@ -613,6 +628,10 @@
             }
         };
 
+        const toggleInlineTimes = () => {
+            document.body.classList.toggle('show-inline-times', $('#show-inline-times').checked);
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             $('#start-date').value = new Date().toISOString().split('T')[0];
             $('#use-location').addEventListener('click', useMyLocation);
@@ -624,6 +643,7 @@
                 e.preventDefault();
                 await searchLocation();
             });
+            $('#show-inline-times').addEventListener('change', toggleInlineTimes);
 
             const params = getUrlParams();
             if (params.get('lat') && params.get('lon')) {
