@@ -216,15 +216,6 @@
             margin: 5px 0;
         }
 
-        .day-detail .close-button {
-            float: right;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.2em;
-            cursor: pointer;
-        }
-
         .overlap-bar {
             height: 4px;
             position: absolute;
@@ -669,21 +660,12 @@
         const createDetailSection = (rowData) => {
             const detailSection = document.createElement('div');
             detailSection.className = 'day-detail';
-            
-            const closeButton = document.createElement('button');
-            closeButton.className = 'close-button';
-            closeButton.innerHTML = '&times;';
-            closeButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                detailSection.classList.remove('active');
-            });
-
             detailSection.innerHTML = `
                 <h3>Night Details ${formatDate(rowData.startDate, 'YYYY-MM-DD')} - ${formatDate(rowData.endDate, 'YYYY-MM-DD')}</h3>
                 
                 <h4>Darkness Information</h4>
-                <p>Civil Darkness: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')} - ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</p>
-                <p>Nautical Darkness: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')} - ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</p>
+                <p>At least Civil Darkness: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')} - ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</p>
+                <p>At least Nautical Darkness: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')} - ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</p>
                 <p>Astronomical Darkness: ${formatDate(rowData.sunNightTime, 'HH:mm:ss')} - ${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</p>
                 
                 <h4>Moon Information</h4>
@@ -692,8 +674,6 @@
                 <p>Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</p>
                 <p>Moon Highest: ${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</p>
             `;
-
-            detailSection.insertBefore(closeButton, detailSection.firstChild);
             return detailSection;
         };
 
