@@ -171,45 +171,6 @@
             font-size: 0.8em;
             opacity: 0.8;
         }
-        @media (max-width: 768px) {
-            #app {
-                width: 95%;
-                padding: 15px;
-            }
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .controls-left, .controls-right {
-                min-width: 40px;
-                flex-wrap: wrap;
-                justify-content: space-between;
-            }
-            input, button {
-                flex: 1 1 auto;
-            }
-            #calendar-view {
-                grid-template-columns: auto 1fr;
-                padding: 10px;
-            }
-            .hour-labels-row {
-                display: none;
-            }
-            .day-right {
-                display: none;
-            }
-            .day-left {
-                min-width: 0;
-            }
-        }
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 2em;
-            }
-            input, button {
-                width: 100%;
-            }
-        }
         .show-inline-times .inline-indicator,
         .day-row:hover .inline-indicator {
             display: inline;
@@ -279,6 +240,73 @@
             height: 100%;
             background-color: rgba(0, 255, 0, 0.3);
         }
+
+        .help-details {
+            margin-top: 30px;
+            background-color: var(--calendar-bg-color);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .help-details h2 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .help-details h3 {
+            color: var(--accent-color);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .help-details p, .help-details ul, .help-details ol {
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+
+        .help-details li {
+            margin-bottom: 5px;
+        }
+        @media (max-width: 768px) {
+            #app {
+                width: 95%;
+                padding: 15px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .controls-left, .controls-right {
+                min-width: 40px;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            input, button {
+                flex: 1 1 auto;
+            }
+            #calendar-view {
+                grid-template-columns: auto 1fr;
+                padding: 10px;
+            }
+            .hour-labels-row {
+                display: none;
+            }
+            .day-right {
+                display: none;
+            }
+            .day-left {
+                min-width: 0;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2em;
+            }
+            input, button {
+                width: 100%;
+            }
+        }
+        
     </style>
 </head>
 <body>
@@ -310,6 +338,61 @@
             </div>
             <section id="calendar-view" aria-live="polite">
                 <h2>Please enter a location or click the "Use My Location" button.</h2>
+            </section>
+            <section id="help-details" class="help-details">
+                <h2>Help and Details</h2>
+                
+                <h3>About</h3>
+                <p>This Moon and Darkness Calendar is designed to help astronomers, astrophotographers, and night sky enthusiasts plan their observations. It provides a visual representation of darkness levels and moon phases, helping users identify optimal times for various types of night sky activities.</p>
+
+                <h3>Using the Calendar</h3>
+                <ol>
+                    <li>Enter a location or use your current location.</li>
+                    <li>Set a start date and number of days to display.</li>
+                    <li>Hover over a day row to see hour-lines and inline times.</li>
+                    <li>Click on a day row to see detailed information for that night.</li>
+                    <li>Use the "Show inline times" option to display key times directly on the bars.</li>
+                    <li>Use the "Show hour lines" option to display vertical hour markers.</li>
+                </ol>
+
+                <h3>Darkness Levels</h3>
+                <p>The darkness levels are calculated using the sun's altitude above the horizon.</p>
+                <ul>
+                    <li><strong>Day:</strong> Sun's altitude > 0°. Full daylight.</li>
+                    <li><strong>Civil Twilight:</strong> Sun's altitude between 0° and -6°. There's enough light for objects to be clearly distinguishable. Brightest stars become visible.</li>
+                    <li><strong>Nautical Twilight:</strong> Sun's altitude between -6° and -12°. The horizon is no longer visible. Many stars used for celestial navigation are visible.</li>
+                    <li><strong>Astronomical Twilight:</strong> Sun's altitude between -12° and -18°. The sky is dark enough for most astronomical observations, but some twilight still interferes with more sensitive observations.</li>
+                    <li><strong>Astronomical Night:</strong> Sun's altitude < -18°. The darkest part of the night. Ideal for deep-sky observations and astrophotography.</li>
+                </ul>
+                <p>These calculations take into account atmospheric refraction, which causes the sun to appear slightly higher than it actually is.</p>
+
+                <h3>Moon Brightness</h3>
+                <p>Moon brightness is calculated using several factors provided by SunCalc3:</p>
+                <ul>
+                    <li><strong>Moon Phase:</strong> Represented as a fraction from 0 (new moon) to 1 (full moon). This directly affects the moon's brightness.</li>
+                    <li><strong>Moon Altitude:</strong> The moon's height above the horizon affects its apparent brightness due to atmospheric extinction. Higher altitude means less atmosphere to look through, resulting in a brighter appearance.</li>
+                    <li><strong>Moon Illumination:</strong> This combines the phase and the position of the moon relative to the observer and the sun. It's represented as a value between 0 and 1, where 1 is fully illuminated.</li>
+                    <li><strong>Moon Distance:</strong> The moon's distance from Earth varies in its orbit, affecting its apparent size and brightness. This is factored into the calculations.</li>
+                </ul>
+                <p>The visual representation in this calendar uses a grayscale gradient to indicate moon brightness, with darker shades representing a less bright moon and lighter shades a brighter moon. The moon is considered "invisible" when it's below the horizon, which is calculated based on the moon's altitude being negative.</p>
+                <p>Note: Actual visibility can be affected by local conditions such as weather, light pollution, and the observer's dark adaptation, which are not accounted for in these calculations.</p>
+
+                <h3>Overlap Bar</h3>
+                <p>The green overlap bar indicates periods when both astronomical darkness and moon invisibility occur simultaneously. These are optimal times for deep-sky observation.</p>
+
+                <h3>Weekend Nights</h3>
+                <p>Weekend nights (Friday and Saturday) are highlighted with a slight green tint for easy identification of potentially more convenient observation times.</p>
+
+                <h3>Feedback</h3>
+                <p>If you have any suggestions, feature requests, or encounter any issues, please don't hesitate to reach out. You can contact me via astro@dersphere.de</p>
+
+                <h3>Changelog</h3>
+                <ul>
+                    <li><strong>Version 2.0</strong> (unreleased): Rewrite. Added inline-times, hour-lines, overlap-bar, and replace tooltips with a daily detail section.</li>
+                    <li><strong>Version 1.2</strong> (20.10.2024): Added gradient for moon illumination.</li>
+                    <li><strong>Version 1.1</strong> (19.10.2024): Added tooltip with times for darkness and moon visibility.</li>
+                    <li><strong>Version 1.0</strong> (19.10.2024): Initial release with basic darkness and moon phase calendar functionality.</li>
+                </ul>
             </section>
         </main>
     </div>
