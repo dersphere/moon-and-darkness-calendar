@@ -113,6 +113,7 @@
         .bars-container {
             display: flex;
             flex-direction: column;
+            position: relative;
             width: 100%;
             gap: 4px;
         }
@@ -230,6 +231,20 @@
         #show-inline-times {
             margin-right: 5px;
         }
+
+        .hour-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            display: none;
+        }
+
+        .show-hour-lines .hour-line {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -254,6 +269,9 @@
                 </form>
                 <label for="show-inline-times">
                     <input type="checkbox" id="show-inline-times"> Show inline times
+                </label>
+                <label for="show-hour-lines">
+                    <input type="checkbox" id="show-hour-lines"> Show hour lines
                 </label>
             </div>
             <section id="calendar-view" aria-live="polite">
@@ -535,6 +553,12 @@
 
             barsContainer.appendChild(createDarknessBar(rowData));
             barsContainer.appendChild(createMoonBar(rowData));
+            for (let hour = 0; hour <= 24; hour++) {
+                const line = document.createElement('div');
+                line.className = 'hour-line';
+                line.style.left = `${(hour / 24) * 100}%`;
+                barsContainer.appendChild(line);
+            }
             dayRow.appendChild(barsContainer);
 
             const dayRight = document.createElement('div');
@@ -629,6 +653,10 @@
             document.body.classList.toggle('show-inline-times', $('#show-inline-times').checked);
         };
 
+        const toggleHourLines = () => {
+            document.body.classList.toggle('show-hour-lines', $('#show-hour-lines').checked);
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             $('#start-date').value = new Date().toISOString().split('T')[0];
             $('#use-location').addEventListener('click', useMyLocation);
@@ -641,6 +669,7 @@
                 await searchLocation();
             });
             $('#show-inline-times').addEventListener('change', toggleInlineTimes);
+            $('#show-hour-lines').addEventListener('change', toggleHourLines);
 
             const params = getUrlParams();
             if (params.get('lat') && params.get('lon')) {
