@@ -89,7 +89,7 @@
         }
         .day-row {
             display: contents;
-            cursor: help;
+            cursor: pointer;
         }
         .day-left, .day-right {
             font-weight: bold;
@@ -148,19 +148,6 @@
             transform: translateX(-50%) rotate(-90deg);
             transform-origin: top center;
             white-space: nowrap;
-        }
-        .darkness-segment:hover::after, .moon-segment:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            white-space: break-spaces;
-            z-index: 1;
-            font-size: 0.8em;
         }
         .inline-indicator {
             font-size: 0.7em;
@@ -242,8 +229,39 @@
             display: none;
         }
 
-        .show-hour-lines .hour-line {
+        .show-hour-lines .hour-line,
+        .day-row:hover .hour-line {
             display: block;
+        }
+
+        .day-detail {
+            display: none;
+            background-color: var(--calendar-bg-color);
+            padding: 15px;
+            border-radius: 5px;
+            grid-column: 1 / -1;
+        }
+
+        .day-detail.active {
+            display: block;
+        }
+
+        .day-detail h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+
+        .day-detail p {
+            margin: 5px 0;
+        }
+
+        .day-detail .close-button {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2em;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -386,15 +404,6 @@
             return isVisible ? `rgba(${c}, ${c}, ${c}, 1)` : 'rgba(0, 0, 32, 0.8)';
         };
 
-        const formatMoonSegmentTitle = (rowData) => {
-            return `Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}\n` +
-                   `Moonrise: ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}\n` +
-                   `Duration Moon below Horizon: ${rowData.moonDurationStr}\n` +
-                   `Illumination: ${(rowData.moonPhaseFraction * 100).toFixed(1)}%\n` +
-                   `Max Elevation: ${rowData.moonHighestDegrees.toFixed(1)}° at ${formatDate(rowData.moonHighestTime, 'HH:mm:ss')}\n` +
-                   `Phase: ${rowData.moonPhaseName}`;
-        };
-
         const getWidth = (start, end) => `${(end - start) / (24 * 60 * 60 * 1000) * 100}%`;
 
         const createDarknessSegment = (start, end, level, rowData) => {
@@ -402,7 +411,6 @@
             segment.className = 'darkness-segment';
             segment.style.width = getWidth(start, end);
             segment.dataset.level = level;
-            segment.title = `${level.charAt(0).toUpperCase() + level.slice(1)} ${formatDate(start, 'HH:mm:ss')} - ${formatDate(end, 'HH:mm:ss')}`;
             if (level === 'astronomicalNight') {
                 const startElement = document.createElement('div');
                 startElement.className = 'inline-indicator';
@@ -425,9 +433,7 @@
             const segment = document.createElement('div');
             segment.className = 'moon-segment';
             segment.style.width = getWidth(start, end);
-            
             segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonPhaseFraction);
-            segment.title = formatMoonSegmentTitle(rowData);
 
             if (!isVisible) {
                 const startElement = document.createElement('div');
@@ -526,6 +532,36 @@
             return bar;
         };
 
+        const createDetailSection = (rowData) => {
+            const detailSection = document.createElement('div');
+            detailSection.className = 'day-detail';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'close-button';
+            closeButton.innerHTML = '&times;';
+            closeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                detailSection.classList.remove('active');
+            });
+
+            detailSection.innerHTML = `
+                <h3>Night Details ${formatDate(rowData.startDate, 'YYYY-MM-DD')}  - ${formatDate(rowData.endDate, 'YYYY-MM-DD')} </h3>
+                <p>Moon Phase: ${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</p>
+                <p>Moonrise: ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</p>
+                <p>Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</p>
+                <p>Moon Highest: ${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</p>
+                <p>Sunset: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')}</p>
+                <p>Civil Twilight End: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')}</p>
+                <p>Astronomical Night Start: ${formatDate(rowData.sunNightTime, 'HH:mm:ss')}</p>
+                <p>Astronomical Night End: ${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')}</p>
+                <p>Civil Twilight Start: ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')}</p>
+                <p>Sunrise: ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')}</p>
+            `;
+
+            detailSection.insertBefore(closeButton, detailSection.firstChild);
+            return detailSection;
+        };
+
         const createDayRow = (startDate, lat, lon) => {
             const rowData = getRowData(startDate, lat, lon);
 
@@ -571,6 +607,13 @@
                 </div>
             `;
             dayRow.appendChild(dayRight);
+
+            const detailSection = createDetailSection(rowData);
+            dayRow.appendChild(detailSection);
+
+            dayRow.addEventListener('click', () => {
+                detailSection.classList.toggle('active');
+            });
 
             return dayRow;
         };
