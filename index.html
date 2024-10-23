@@ -315,17 +315,17 @@
             return new Intl.DateTimeFormat(navigator.language, options[format]).format(date);
         };
 
+        const formatDuration = (start, end) => {
+            const durationMs = end - start;
+            const hours = Math.floor(durationMs / (1000 * 60 * 60));
+            const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours}:${minutes.toString().padStart(2, '0')}h`;
+        };
+
         const addDays = (date, days) => {
             const result = new Date(date);
             result.setDate(result.getDate() + days);
             return result;
-        };
-
-        const getDurationStr = (start, end) => {
-            const durationMs = end - start;
-            const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-            const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-            return `${durationHours}:${durationMinutes.toString().padStart(2, '0')}`;
         };
 
         const getRowData = (startDate, lat, lon) => {
@@ -350,7 +350,6 @@
             const moonPhaseName = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.name : moonIlluminationRight.phase.name;
             const moonPhaseEmoji = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.emoji : moonIlluminationRight.phase.emoji;
             const moonPhaseFraction = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.fraction : moonIlluminationRight.fraction;
-            const moonDurationStr = getDurationStr(moonRiseTime, moonSetTime);
             const sunRiseTime = isIn(sunTimesLeft.sunriseEnd.value) ? sunTimesLeft.sunriseEnd.value : sunTimesRight.sunriseEnd.value;
             const sunSetTime = isIn(sunTimesLeft.sunsetStart.value) ? sunTimesLeft.sunsetStart.value : sunTimesRight.sunsetStart.value;
             const sunDawnTime = isIn(sunTimesLeft.civilDawn.value) ? sunTimesLeft.civilDawn.value : sunTimesRight.civilDawn.value;
@@ -385,7 +384,6 @@
                 moonPhaseName,
                 moonPhaseEmoji,
                 moonPhaseFraction,
-                moonDurationStr,
                 sunRiseTime,
                 sunSetTime,
                 sunDawnTime,
@@ -395,7 +393,6 @@
                 getSunDarknessLevel,
                 getMoonIsVisible,
             }
-            console.log(moonTimesLeft);
             return rowData;
         }
 
@@ -545,17 +542,18 @@
             });
 
             detailSection.innerHTML = `
-                <h3>Night Details ${formatDate(rowData.startDate, 'YYYY-MM-DD')}  - ${formatDate(rowData.endDate, 'YYYY-MM-DD')} </h3>
+                <h3>Night Details ${formatDate(rowData.startDate, 'YYYY-MM-DD')} - ${formatDate(rowData.endDate, 'YYYY-MM-DD')}</h3>
+                
+                <h4>Darkness Information</h4>
+                <p>Civil Darkness: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')} - ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</p>
+                <p>Nautical Darkness: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')} - ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</p>
+                <p>Astronomical Darkness: ${formatDate(rowData.sunNightTime, 'HH:mm:ss')} - ${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</p>
+                
+                <h4>Moon Information</h4>
                 <p>Moon Phase: ${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</p>
                 <p>Moonrise: ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</p>
                 <p>Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</p>
                 <p>Moon Highest: ${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</p>
-                <p>Sunset: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')}</p>
-                <p>Civil Twilight End: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')}</p>
-                <p>Astronomical Night Start: ${formatDate(rowData.sunNightTime, 'HH:mm:ss')}</p>
-                <p>Astronomical Night End: ${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')}</p>
-                <p>Civil Twilight Start: ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')}</p>
-                <p>Sunrise: ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')}</p>
             `;
 
             detailSection.insertBefore(closeButton, detailSection.firstChild);
