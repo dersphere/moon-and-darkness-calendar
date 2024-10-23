@@ -263,6 +263,22 @@
             font-size: 1.2em;
             cursor: pointer;
         }
+
+        .overlap-bar {
+            height: 4px;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            z-index: 2;
+        }
+
+        .overlap-segment {
+            position: absolute;
+            height: 100%;
+            background-color: rgba(0, 255, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -529,6 +545,44 @@
             return bar;
         };
 
+        const createOverlapBar = (rowData) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar overlap-bar';
+
+            let currentTime = new Date(rowData.startDate);
+            let segmentStart = null;
+
+            while (currentTime < rowData.endDate) {
+                const isDark = rowData.getSunDarknessLevel(currentTime) === 'astronomicalNight';
+                const isMoonInvisible = !rowData.getMoonIsVisible(currentTime);
+
+                if (isDark && isMoonInvisible) {
+                    if (!segmentStart) {
+                        segmentStart = new Date(currentTime);
+                    }
+                } else if (segmentStart) {
+                    const segment = document.createElement('div');
+                    segment.className = 'overlap-segment';
+                    segment.style.left = getWidth(rowData.startDate, segmentStart);
+                    segment.style.width = getWidth(segmentStart, currentTime);
+                    bar.appendChild(segment);
+                    segmentStart = null;
+                }
+
+                currentTime.setMinutes(currentTime.getMinutes() + 5);
+            }
+
+            if (segmentStart) {
+                const segment = document.createElement('div');
+                segment.className = 'overlap-segment';
+                segment.style.left = getWidth(rowData.startDate, segmentStart);
+                segment.style.width = getWidth(segmentStart, rowData.endDate);
+                bar.appendChild(segment);
+            }
+
+            return bar;
+        };
+
         const createDetailSection = (rowData) => {
             const detailSection = document.createElement('div');
             detailSection.className = 'day-detail';
@@ -587,6 +641,7 @@
 
             barsContainer.appendChild(createDarknessBar(rowData));
             barsContainer.appendChild(createMoonBar(rowData));
+            barsContainer.appendChild(createOverlapBar(rowData));
             for (let hour = 0; hour <= 24; hour++) {
                 const line = document.createElement('div');
                 line.className = 'hour-line';
