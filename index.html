@@ -422,7 +422,7 @@
             const endDate = addDays(startDate, 1);
 
             const isIn = (time) => {
-                return time >= startDate && time < endDate;;
+                return time >= startDate && time < endDate;
             }
 
             const moonIlluminationLeft = SunCalc.getMoonIllumination(startDate);
@@ -432,7 +432,7 @@
             const sunTimesLeft = SunCalc.getSunTimes(startDate, lat, lon);
             const sunTimesRight = SunCalc.getSunTimes(endDate, lat, lon);
 
-            const moonRiseTime = isIn(moonTimesLeft.rise, startDate, endDate) ? moonTimesLeft.rise : moonTimesRight.rise || null;
+            const moonRiseTime = isIn(moonTimesLeft.rise) ? moonTimesLeft.rise : moonTimesRight.rise || null;
             const moonSetTime = isIn(moonTimesLeft.set) ? moonTimesLeft.set : moonTimesRight.set || null;
             const moonHighestTime = isIn(moonTimesLeft.highest) ? moonTimesLeft.highest : moonTimesRight.highest;
             const moonPositionAtHighest = SunCalc.getMoonPosition(moonHighestTime, lat, lon);
