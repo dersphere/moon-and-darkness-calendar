@@ -453,34 +453,33 @@
         };
 
         const getRowData = (startDate, lat, lon) => {
+            const averageMoonDistance = 384400; // in km
             const endDate = addDays(startDate, 1);
 
             const isIn = (time) => {
                 return time >= startDate && time < endDate;
             }
 
-            const moonIlluminationLeft = SunCalc.getMoonIllumination(startDate);
-            const moonIlluminationRight = SunCalc.getMoonIllumination(endDate);
             const moonTimesLeft = SunCalc.getMoonTimes(startDate, lat, lon);
             const moonTimesRight = SunCalc.getMoonTimes(endDate, lat, lon);
             const sunTimesLeft = SunCalc.getSunTimes(startDate, lat, lon);
             const sunTimesRight = SunCalc.getSunTimes(endDate, lat, lon);
 
             const moonRiseTime = isIn(moonTimesLeft.rise) ? moonTimesLeft.rise : moonTimesRight.rise || null;
+            const moonRiseData = SunCalc.getMoonData(moonRiseTime, lat, lon);
             const moonSetTime = isIn(moonTimesLeft.set) ? moonTimesLeft.set : moonTimesRight.set || null;
+            const moonSetData = SunCalc.getMoonData(moonSetTime, lat, lon);
             let moonHighestTime = null;
             if (moonRiseTime && moonSetTime) {
                 moonHighestTime = new Date((moonRiseTime.getTime() + moonSetTime.getTime()) / 2);
                 if (moonSetTime < moonRiseTime ) {
-                    // assume moonrise is next day, add 12 hours to moonHighestTime
-                    moonHighestTime = new Date(moonHighestTime.setHours(moonHighestTime.getHours() + 12));
+                    moonHighestTime = new Date(moonHighestTime.setHours(moonHighestTime.getHours() - 12));
                 }
             }
             const moonPositionAtHighest = SunCalc.getMoonPosition(moonHighestTime, lat, lon);
-            const moonHighestDegrees = moonPositionAtHighest.altitudeDegrees;  // fixme: not needed maybe?
-            const moonPhaseName = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.name : moonIlluminationRight.phase.name;
-            const moonPhaseEmoji = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.emoji : moonIlluminationRight.phase.emoji;
-            const moonPhaseFraction = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.fraction : moonIlluminationRight.fraction;
+            const moonData = SunCalc.getMoonData(moonHighestTime, lat, lon);
+            const moonIllumination = SunCalc.getMoonIllumination(moonHighestTime);
+            const moonDistancePercentage = (moonData.distance / averageMoonDistance) * 100;
             const sunRiseTime = isIn(sunTimesLeft.sunriseEnd.value) ? sunTimesLeft.sunriseEnd.value : sunTimesRight.sunriseEnd.value;
             const sunSetTime = isIn(sunTimesLeft.sunsetStart.value) ? sunTimesLeft.sunsetStart.value : sunTimesRight.sunsetStart.value;
             const sunDawnTime = isIn(sunTimesLeft.civilDawn.value) ? sunTimesLeft.civilDawn.value : sunTimesRight.civilDawn.value;
@@ -511,10 +510,11 @@
                 moonRiseTime,
                 moonSetTime,
                 moonHighestTime,
-                moonHighestDegrees,
-                moonPhaseName,
-                moonPhaseEmoji,
-                moonPhaseFraction,
+                moonData,
+                moonIllumination,
+                moonRiseData,
+                moonSetData,
+                moonDistancePercentage,
                 sunRiseTime,
                 sunSetTime,
                 sunDawnTime,
@@ -561,7 +561,7 @@
             const segment = document.createElement('div');
             segment.className = 'moon-segment';
             segment.style.width = getWidth(start, end);
-            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonPhaseFraction);
+            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonIllumination.fraction);
 
             if (!isVisible) {
                 const startElement = document.createElement('div');
@@ -698,6 +698,12 @@
             return bar;
         };
 
+        const getCompassDirection = (azimuthDegrees) => {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(azimuthDegrees / 22.5) % 16;
+            return directions[index];
+        };
+
         const createDetailSection = (rowData) => {
             const detailSection = document.createElement('div');
             detailSection.className = 'day-detail';
@@ -736,19 +742,31 @@
                 <table class="detail-table">
                     <tr>
                         <td>Moon Phase</td>
-                        <td>${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</td>
+                        <td>${rowData.moonIllumination.phase.name} (${(rowData.moonIllumination.fraction * 100).toFixed(1)}% illuminated)</td>
                     </tr>
                     <tr>
                         <td>Moonrise</td>
-                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td>Moonset</td>
-                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</td>
+                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonRiseData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonRiseData.azimuthDegrees)})</td>
                     </tr>
                     <tr>
                         <td>Moon Highest</td>
-                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'HH:mm:ss') : 'N/A'} (${rowData.moonHighestDegrees.toFixed(1)}°)</td>
+                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonData.azimuthDegrees)}, Altitude ${rowData.moonData.altitudeDegrees.toFixed(1)}°)</td>
+                    </tr>
+                    <tr>
+                        <td>Moonset</td>
+                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonSetData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonSetData.azimuthDegrees)})</td>
+                    </tr>
+                    <tr>
+                        <td>Moon Distance</td>
+                        <td>${rowData.moonData.distance.toFixed(0)} km (${rowData.moonDistancePercentage.toFixed(2)}% of average)</td>
+                    </tr>
+                    <tr>
+                        <td>Moon Parallactic Angle</td>
+                        <td>${rowData.moonData.parallacticAngleDegrees.toFixed(1)}°</td>
+                    </tr>
+                    <tr>
+                        <td>Moon Illumination Angle</td>
+                        <td>${rowData.moonData.illumination.angle.toFixed(1)}°</td>
                     </tr>
                 </table>
             `;
@@ -771,8 +789,8 @@
                     <span class="day-of-week">${formatDate(rowData.startDate, 'ddd')}</span>
                 </div>
                 <div class="moon-info">
-                    <span class="moon-icon">${rowData.moonPhaseEmoji}</span>
-                    <span>${(rowData.moonPhaseFraction * 100).toFixed(0)}%</span>
+                    <span class="moon-icon">${rowData.moonIllumination.phase.emoji}</span>
+                    <span>${(rowData.moonIllumination.fraction * 100).toFixed(0)}%</span>
                 </div>
             `;
             dayRow.appendChild(dayLeft);
