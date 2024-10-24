@@ -242,12 +242,23 @@
         .day-detail.active {
             display: block;
         }
-        .day-detail h3 {
-            margin-top: 0;
+        .day-detail h3, .day-detail h4 {
             color: var(--accent-color);
+            margin-top: 10px;
+            margin-bottom: 5px;
         }
-        .day-detail p {
-            margin: 5px 0;
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .detail-table th, .detail-table td {
+            padding: 5px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: left;
+        }
+        .detail-table th {
+            background-color: rgba(255, 215, 0, 0.1);
         }
         .overlap-bar {
             height: 4px;
@@ -687,14 +698,52 @@
                 <h3>Night Details ${formatDate(rowData.startDate, 'YYYY-MM-DD')} - ${formatDate(rowData.endDate, 'YYYY-MM-DD')}</h3>
                 
                 <h4>Darkness Information</h4>
-                <p>At least Civil Darkness: ${formatDate(rowData.sunSetTime, 'HH:mm:ss')} - ${formatDate(rowData.sunRiseTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</p>
-                <p>At least Nautical Darkness: ${formatDate(rowData.sunDuskTime, 'HH:mm:ss')} - ${formatDate(rowData.sunDawnTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</p>
-                <p>Astronomical Darkness: ${formatDate(rowData.sunNightTime, 'HH:mm:ss')} - ${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')} = ${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</p>
+                <table class="detail-table">
+                    <tr>
+                        <th>Level</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Duration</th>
+                    </tr>
+                    <tr>
+                        <td>Civil Darkness</td>
+                        <td>${formatDate(rowData.sunSetTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunRiseTime, 'HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</td>
+                    </tr>
+                    <tr>
+                        <td>Nautical Darkness</td>
+                        <td>${formatDate(rowData.sunDuskTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunDawnTime, 'HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</td>
+                    </tr>
+                    <tr>
+                        <td>Astronomical Darkness</td>
+                        <td>${formatDate(rowData.sunNightTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</td>
+                    </tr>
+                </table>
                 
                 <h4>Moon Information</h4>
-                <p>Moon Phase: ${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</p>
-                <p>Moonrise: ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</p>
-                <p>Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</p>
+                <table class="detail-table">
+                    <tr>
+                        <td>Moon Phase</td>
+                        <td>${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</td>
+                    </tr>
+                    <tr>
+                        <td>Moonrise</td>
+                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Moonset</td>
+                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</td>
+                    </tr>
+                    <!--<tr>
+                        <td>Moon Highest</td>
+                        <td>${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</td>
+                    </tr>-->
+                </table>
             `;
             return detailSection;
         };
