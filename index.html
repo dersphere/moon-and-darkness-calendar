@@ -391,13 +391,15 @@
                 </ul>
                 <p>These calculations take into account atmospheric refraction, which causes the sun to appear slightly higher than it actually is.</p>
 
-                <h3>Moon Brightness</h3>
-                <p>Moon brightness is calculated using several factors provided by SunCalc3:</p>
+                <h3>Moon Information</h3>
+                <p>The moon information includes several key details:</p>
                 <ul>
-                    <li><strong>Moon Phase:</strong> Represented as a fraction from 0 (new moon) to 1 (full moon). This directly affects the moon's brightness.</li>
-                    <li><strong>Moon Altitude:</strong> The moon's height above the horizon affects its apparent brightness due to atmospheric extinction. Higher altitude means less atmosphere to look through, resulting in a brighter appearance.</li>
-                    <li><strong>Moon Illumination:</strong> This combines the phase and the position of the moon relative to the observer and the sun. It's represented as a value between 0 and 1, where 1 is fully illuminated.</li>
-                    <li><strong>Moon Distance:</strong> The moon's distance from Earth varies in its orbit, affecting its apparent size and brightness. This is factored into the calculations.</li>
+                    <li><strong>Moon Phase:</strong> Represented as a a percentage of illumination. This directly affects the moon's brightness.</li>
+                    <li><strong>Moonrise and Moonset:</strong> Times when the moon rises and sets, including azimuth angles and compass directions.</li>
+                    <li><strong>Moon Altitude and Azimuth:</strong> The moon's height above the horizon and its direction in degrees from north.</li>
+                    <li><strong>Moon Distance:</strong> The distance from Earth to the moon, with a percentage difference from the average distance of 384,400 km.</li>
+                    <li><strong>Moon Parallactic Angle:</strong> The angle between the zenith and the pole of the ecliptic, as seen from the moon.</li>
+                    <li><strong>Moon Illumination Angle:</strong> The angle of the moon's illumination.</li>
                 </ul>
                 <p>The visual representation in this calendar uses a grayscale gradient to indicate moon brightness, with darker shades representing a less bright moon and lighter shades a brighter moon. The moon is considered "invisible" when it's below the horizon, which is calculated based on the moon's altitude being negative.</p>
                 <p>Note: Actual visibility can be affected by local conditions such as weather, light pollution, and the observer's dark adaptation, which are not accounted for in these calculations.</p>
@@ -460,6 +462,29 @@
                 return time >= startDate && time < endDate;
             }
 
+            const getMoonPhaseEmoji = (phaseValue) => {
+                if (phaseValue < 0.03) {
+                    return '🌑'; // New Moon
+                } else if (phaseValue < 0.21) {
+                    return '🌒'; // Waxing Crescent
+                } else if (phaseValue < 0.28) {
+                    return '🌓'; // First Quarter
+                } else if (phaseValue < 0.46) {
+                    return '🌔'; // Waxing Gibbous
+                } else if (phaseValue < 0.53) {
+                    return '🌕'; // Full Moon
+                } else if (phaseValue < 0.71) {
+                    return '🌖'; // Waning Gibbous
+                } else if (phaseValue < 0.78) {
+                    return '🌗'; // Last Quarter
+                } else if (phaseValue < 0.96) {
+                    return '🌘'; // Waning Crescent
+                } else {
+                    return '🌑'; // Default to New Moon
+                }
+            };
+
+
             const moonTimesLeft = SunCalc.getMoonTimes(startDate, lat, lon);
             const moonTimesRight = SunCalc.getMoonTimes(endDate, lat, lon);
             const sunTimesLeft = SunCalc.getSunTimes(startDate, lat, lon);
@@ -480,6 +505,7 @@
             const moonData = SunCalc.getMoonData(moonHighestTime, lat, lon);
             const moonIllumination = SunCalc.getMoonIllumination(moonHighestTime);
             const moonDistancePercentage = (moonData.distance / averageMoonDistance) * 100;
+            const moonEmoji = getMoonPhaseEmoji(moonIllumination.phaseValue);
             const sunRiseTime = isIn(sunTimesLeft.sunriseEnd.value) ? sunTimesLeft.sunriseEnd.value : sunTimesRight.sunriseEnd.value;
             const sunSetTime = isIn(sunTimesLeft.sunsetStart.value) ? sunTimesLeft.sunsetStart.value : sunTimesRight.sunsetStart.value;
             const sunDawnTime = isIn(sunTimesLeft.civilDawn.value) ? sunTimesLeft.civilDawn.value : sunTimesRight.civilDawn.value;
@@ -515,6 +541,7 @@
                 moonRiseData,
                 moonSetData,
                 moonDistancePercentage,
+                moonEmoji,
                 sunRiseTime,
                 sunSetTime,
                 sunDawnTime,
@@ -789,7 +816,7 @@
                     <span class="day-of-week">${formatDate(rowData.startDate, 'ddd')}</span>
                 </div>
                 <div class="moon-info">
-                    <span class="moon-icon">${rowData.moonIllumination.phase.emoji}</span>
+                    <span class="moon-icon">${rowData.moonEmoji}</span>
                     <span>${(rowData.moonIllumination.fraction * 100).toFixed(0)}%</span>
                 </div>
             `;
