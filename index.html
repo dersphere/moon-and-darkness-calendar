@@ -468,7 +468,14 @@
 
             const moonRiseTime = isIn(moonTimesLeft.rise) ? moonTimesLeft.rise : moonTimesRight.rise || null;
             const moonSetTime = isIn(moonTimesLeft.set) ? moonTimesLeft.set : moonTimesRight.set || null;
-            const moonHighestTime = isIn(moonTimesLeft.highest) ? moonTimesLeft.highest : moonTimesRight.highest;
+            let moonHighestTime = null;
+            if (moonRiseTime && moonSetTime) {
+                moonHighestTime = new Date((moonRiseTime.getTime() + moonSetTime.getTime()) / 2);
+                if (moonSetTime < moonRiseTime ) {
+                    // assume moonrise is next day, add 12 hours to moonHighestTime
+                    moonHighestTime = new Date(moonHighestTime.setHours(moonHighestTime.getHours() + 12));
+                }
+            }
             const moonPositionAtHighest = SunCalc.getMoonPosition(moonHighestTime, lat, lon);
             const moonHighestDegrees = moonPositionAtHighest.altitudeDegrees;  // fixme: not needed maybe?
             const moonPhaseName = isIn(moonTimesLeft.highest) ? moonIlluminationLeft.phase.name : moonIlluminationRight.phase.name;
@@ -739,10 +746,10 @@
                         <td>Moonset</td>
                         <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</td>
                     </tr>
-                    <!--<tr>
+                    <tr>
                         <td>Moon Highest</td>
-                        <td>${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</td>
-                    </tr>-->
+                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'HH:mm:ss') : 'N/A'} (${rowData.moonHighestDegrees.toFixed(1)}°)</td>
+                    </tr>
                 </table>
             `;
             return detailSection;
