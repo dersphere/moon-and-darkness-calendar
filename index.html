@@ -672,7 +672,6 @@
                 <p>Moon Phase: ${rowData.moonPhaseName} (${(rowData.moonPhaseFraction * 100).toFixed(1)}% illuminated)</p>
                 <p>Moonrise: ${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'}</p>
                 <p>Moonset: ${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'}</p>
-                <p>Moon Highest: ${formatDate(rowData.moonHighestTime, 'HH:mm:ss')} (${rowData.moonHighestDegrees.toFixed(1)}°)</p>
             `;
             return detailSection;
         };
