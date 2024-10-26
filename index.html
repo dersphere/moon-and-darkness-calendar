@@ -369,6 +369,7 @@
                 
                 <h3>About</h3>
                 <p>This Moon and Darkness Calendar is designed to help astronomers, astrophotographers, and night sky enthusiasts plan their observations. It provides a visual representation of darkness levels and moon phases, helping users identify optimal times for various types of night sky activities.</p>
+                <p>Each day-row focuses on a <b>night</b>, which is defined as a 24h period from 12:00 (noon) to 12:00 on the next day, while most other tools/tables/websites use a calendar-days, so a 24h period from 00:00 to 24:00.</p>
 
                 <h3>Using the Calendar</h3>
                 <ol>
@@ -434,6 +435,7 @@
                 'MMM D': { month: 'short', day: 'numeric' },
                 'ddd': { weekday: 'short' },
                 'YYYY-MM-DD': { year: 'numeric', month: '2-digit', day: '2-digit' },
+                'YYYY-MM-DD HH:mm:ss': { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false },
                 'HH:mm:ss': { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false },
                 'HH:mm': { hour: '2-digit', minute: '2-digit', hour12: false }
             };
@@ -747,20 +749,20 @@
                     </tr>
                     <tr>
                         <td>Civil Darkness</td>
-                        <td>${formatDate(rowData.sunSetTime, 'HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunRiseTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunSetTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunRiseTime, 'YYYY-MM-DD HH:mm:ss')}</td>
                         <td>${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</td>
                     </tr>
                     <tr>
                         <td>Nautical Darkness</td>
-                        <td>${formatDate(rowData.sunDuskTime, 'HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunDawnTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunDuskTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunDawnTime, 'YYYY-MM-DD HH:mm:ss')}</td>
                         <td>${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</td>
                     </tr>
                     <tr>
                         <td>Astronomical Darkness</td>
-                        <td>${formatDate(rowData.sunNightTime, 'HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunNightEndTime, 'HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunNightTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunNightEndTime, 'YYYY-MM-DD HH:mm:ss')}</td>
                         <td>${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</td>
                     </tr>
                 </table>
@@ -768,20 +770,20 @@
                 <h4>Moon Information</h4>
                 <table class="detail-table">
                     <tr>
-                        <td>Moon Phase</td>
+                        <td>Moon Phase (at highest)</td>
                         <td>${rowData.moonIllumination.phase.name} (${(rowData.moonIllumination.fraction * 100).toFixed(1)}% illuminated)</td>
                     </tr>
                     <tr>
                         <td>Moonrise</td>
-                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonRiseData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonRiseData.azimuthDegrees)})</td>
+                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonRiseData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonRiseData.azimuthDegrees)})</td>
                     </tr>
                     <tr>
                         <td>Moon Highest</td>
-                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonData.azimuthDegrees)}, Altitude ${rowData.moonData.altitudeDegrees.toFixed(1)}°)</td>
+                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonData.azimuthDegrees)}, Altitude ${rowData.moonData.altitudeDegrees.toFixed(1)}°)</td>
                     </tr>
                     <tr>
                         <td>Moonset</td>
-                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonSetData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonSetData.azimuthDegrees)})</td>
+                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonSetData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonSetData.azimuthDegrees)})</td>
                     </tr>
                     <tr>
                         <td>Moon Distance</td>
