@@ -505,6 +505,7 @@
             }
             const moonPositionAtHighest = SunCalc.getMoonPosition(moonHighestTime, lat, lon);
             const moonData = SunCalc.getMoonData(moonHighestTime, lat, lon);
+            const moonAge = moonData.illumination.fraction * 29.53;
             const moonIllumination = SunCalc.getMoonIllumination(moonHighestTime);
             const moonDistancePercentage = (moonData.distance / averageMoonDistance) * 100;
             const moonEmoji = getMoonPhaseEmoji(moonIllumination.phaseValue);
@@ -544,6 +545,7 @@
                 moonSetData,
                 moonDistancePercentage,
                 moonEmoji,
+                moonAge,
                 sunRiseTime,
                 sunSetTime,
                 sunDawnTime,
@@ -771,7 +773,7 @@
                 <table class="detail-table">
                     <tr>
                         <td>Moon Phase (at highest)</td>
-                        <td>${rowData.moonIllumination.phase.name} (${(rowData.moonIllumination.fraction * 100).toFixed(1)}% illuminated)</td>
+                        <td>${rowData.moonIllumination.phase.name} (${(rowData.moonIllumination.fraction * 100).toFixed(1)}% illuminated, Age: ${rowData.moonAge.toFixed(0)} days)</td>
                     </tr>
                     <tr>
                         <td>Moonrise</td>
