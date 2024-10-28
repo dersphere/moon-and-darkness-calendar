@@ -395,12 +395,11 @@
                 <h3>Moon Information</h3>
                 <p>The moon information includes several key details:</p>
                 <ul>
-                    <li><strong>Moon Phase:</strong> Represented as a a percentage of illumination. This directly affects the moon's brightness.</li>
-                    <li><strong>Moonrise and Moonset:</strong> Times when the moon rises and sets, including azimuth angles and compass directions.</li>
-                    <li><strong>Moon Altitude and Azimuth:</strong> The moon's height above the horizon and its direction in degrees from north.</li>
-                    <li><strong>Moon Distance:</strong> The distance from Earth to the moon, with a percentage difference from the average distance of 384,400 km.</li>
-                    <li><strong>Moon Parallactic Angle:</strong> The angle between the zenith and the pole of the ecliptic, as seen from the moon.</li>
-                    <li><strong>Moon Illumination Angle:</strong> The angle of the moon's illumination.</li>
+                    <li><strong>Moon Phase:</strong> The current phase name, illumination percentage, and moon age in days (based on the 29.53-day lunar cycle).</li>
+                    <li><strong>Moonrise:</strong> Rise time is when the moon first starts to be visible above the horizon, including its azimuth (direction) and altitude.</li>
+                    <li><strong>Moon Culmination:</strong> Time when the moon reaches its highest point in the sky, including azimuth and altitude.</li>
+                    <li><strong>Moonset:</strong> Set time is the moment when the moon appears to vanish below the horizon, including its azimuth and altitude.</li>
+                    <li><strong>Moon Distance:</strong> The distance between Earth and moon in kilometers, with a percentage comparison to the average distance (384,400 km).</li>
                 </ul>
                 <p>The visual representation in this calendar uses a grayscale gradient to indicate moon brightness, with darker shades representing a less bright moon and lighter shades a brighter moon. The moon is considered "invisible" when it's below the horizon, which is calculated based on the moon's altitude being negative.</p>
                 <p>Note: Actual visibility can be affected by local conditions such as weather, light pollution, and the observer's dark adaptation, which are not accounted for in these calculations.</p>
@@ -416,6 +415,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
+                    <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
                     <li><strong>Version 2.1</strong> (26.10.2024): Added date to moon times, added moon age. Removed moon illumination angle.</li>
                     <li><strong>Version 2.0</strong> (24.10.2024): Rewrite. Added inline-times, hour-lines, overlap-bar, and replace tooltips with a daily detail section.</li>
                     <li><strong>Version 1.2</strong> (20.10.2024): Added gradient for moon illumination.</li>
@@ -425,7 +425,7 @@
             </section>
         </main>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/suncalc3@2.0.5/suncalc.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.17/astronomy.browser.js"></script>
     <script type="module">
         const $ = (selector) => document.querySelector(selector);
         const getUrlParams = () => new URLSearchParams(window.location.search);
@@ -444,7 +444,20 @@
             return new Intl.DateTimeFormat(navigator.language, options[format]).format(date);
         };
 
+        const formatDegrees = (degrees) => {
+            if (degrees === null || degrees === undefined) return '--';
+            return `${degrees.toFixed(1)}°`;
+        };
+
+        const getCompassDirection = (azimuthDegrees) => {
+            if (azimuthDegrees === null || azimuthDegrees === undefined) return '--';
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(azimuthDegrees / 22.5) % 16;
+            return directions[index];
+        };
+
         const formatDuration = (start, end) => {
+            if (!start || !end) return '--';
             const durationMs = end - start;
             const hours = Math.floor(durationMs / (1000 * 60 * 60));
             const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -460,99 +473,113 @@
         const getRowData = (startDate, lat, lon) => {
             const averageMoonDistance = 384400; // in km
             const endDate = addDays(startDate, 1);
+            const centerDate = new Date(endDate);
+            centerDate.setHours(0, 0, 0, 0);
 
-            const isIn = (time) => {
-                return time >= startDate && time < endDate;
-            }
-
-            const getMoonPhaseEmoji = (phaseValue) => {
-                if (phaseValue < 0.03) {
-                    return '🌑'; // New Moon
-                } else if (phaseValue < 0.21) {
-                    return '🌒'; // Waxing Crescent
-                } else if (phaseValue < 0.28) {
-                    return '🌓'; // First Quarter
-                } else if (phaseValue < 0.46) {
-                    return '🌔'; // Waxing Gibbous
-                } else if (phaseValue < 0.53) {
-                    return '🌕'; // Full Moon
-                } else if (phaseValue < 0.71) {
-                    return '🌖'; // Waning Gibbous
-                } else if (phaseValue < 0.78) {
-                    return '🌗'; // Last Quarter
-                } else if (phaseValue < 0.96) {
-                    return '🌘'; // Waning Crescent
-                } else {
-                    return '🌑'; // Default to New Moon
-                }
+            const dateToAstro = (date) => {
+                return Astronomy.MakeTime(date);
             };
 
+            const getMoonHorizontalCoordinates = (time) => {
+                const EquatorialCoordinates = Astronomy.Equator("Moon", dateToAstro(time), observer, true, true);
+                const HorizontalCoordinates = Astronomy.Horizon(dateToAstro(time), observer, EquatorialCoordinates.ra, EquatorialCoordinates.dec);
+                return HorizontalCoordinates;
+            };
 
-            const moonTimesLeft = SunCalc.getMoonTimes(startDate, lat, lon);
-            const moonTimesRight = SunCalc.getMoonTimes(endDate, lat, lon);
-            const sunTimesLeft = SunCalc.getSunTimes(startDate, lat, lon);
-            const sunTimesRight = SunCalc.getSunTimes(endDate, lat, lon);
+            const getMoonPhaseName = (phaseFraction) => {
+                if (phaseFraction < 0.03) return 'New Moon';
+                if (phaseFraction < 0.21) return 'Waxing Crescent';
+                if (phaseFraction < 0.28) return 'First Quarter';
+                if (phaseFraction < 0.46) return 'Waxing Gibbous';
+                if (phaseFraction < 0.53) return 'Full Moon';
+                if (phaseFraction < 0.71) return 'Waning Gibbous';
+                if (phaseFraction < 0.78) return 'Last Quarter';
+                if (phaseFraction < 0.96) return 'Waning Crescent';
+                return 'New Moon';
+            };
 
-            const moonRiseTime = isIn(moonTimesLeft.rise) ? moonTimesLeft.rise : moonTimesRight.rise || null;
-            const moonRiseData = SunCalc.getMoonData(moonRiseTime, lat, lon);
-            const moonSetTime = isIn(moonTimesLeft.set) ? moonTimesLeft.set : moonTimesRight.set || null;
-            const moonSetData = SunCalc.getMoonData(moonSetTime, lat, lon);
-            let moonHighestTime = null;
-            if (moonRiseTime && moonSetTime) {
-                moonHighestTime = new Date((moonRiseTime.getTime() + moonSetTime.getTime()) / 2);
-                if (moonSetTime < moonRiseTime ) {
-                    moonHighestTime = new Date(moonHighestTime.setHours(moonHighestTime.getHours() - 12));
-                }
-            }
-            const moonPositionAtHighest = SunCalc.getMoonPosition(moonHighestTime, lat, lon);
-            const moonData = SunCalc.getMoonData(moonHighestTime, lat, lon);
-            const moonAge = moonData.illumination.fraction * 29.53;
-            const moonIllumination = SunCalc.getMoonIllumination(moonHighestTime);
-            const moonDistancePercentage = (moonData.distance / averageMoonDistance) * 100;
-            const moonEmoji = getMoonPhaseEmoji(moonIllumination.phaseValue);
-            const sunRiseTime = isIn(sunTimesLeft.sunriseEnd.value) ? sunTimesLeft.sunriseEnd.value : sunTimesRight.sunriseEnd.value;
-            const sunSetTime = isIn(sunTimesLeft.sunsetStart.value) ? sunTimesLeft.sunsetStart.value : sunTimesRight.sunsetStart.value;
-            const sunDawnTime = isIn(sunTimesLeft.civilDawn.value) ? sunTimesLeft.civilDawn.value : sunTimesRight.civilDawn.value;
-            const sunDuskTime = isIn(sunTimesLeft.civilDusk.value) ? sunTimesLeft.civilDusk.value : sunTimesRight.civilDusk.value;
-            const sunNightTime = isIn(sunTimesLeft.astronomicalDusk.value) ? sunTimesLeft.astronomicalDusk.value : sunTimesRight.astronomicalDusk.value;
-            const sunNightEndTime = isIn(sunTimesLeft.astronomicalDawn.value) ? sunTimesLeft.astronomicalDawn.value : sunTimesRight.astronomicalDawn.value;
+            const getMoonPhaseEmoji = (phaseFraction) => {
+                if (phaseFraction < 0.03) return '🌑'; // New Moon
+                if (phaseFraction < 0.21) return '🌒'; // Waxing Crescent
+                if (phaseFraction < 0.28) return '🌓'; // First Quarter
+                if (phaseFraction < 0.46) return '🌔'; // Waxing Gibbous
+                if (phaseFraction < 0.53) return '🌕'; // Full Moon
+                if (phaseFraction < 0.71) return '🌖'; // Waning Gibbous
+                if (phaseFraction < 0.78) return '🌗'; // Last Quarter
+                if (phaseFraction < 0.96) return '🌘'; // Waning Crescent
+                return '🌑'; // Default to New Moon
+            };
+
+            const observer = new Astronomy.Observer(lat, lon, 0);
+            const astroStartDate = dateToAstro(startDate);
+            const directionAsc = 1;
+            const directionDesc = -1;
+
+            const moonRiseTime = Astronomy.SearchRiseSet('Moon', observer, directionAsc, astroStartDate, 1)?.date;
+            const moonRiseCoordinates = moonRiseTime ? getMoonHorizontalCoordinates(dateToAstro(moonRiseTime)) : null;
+            const moonSetTime = Astronomy.SearchRiseSet('Moon', observer, directionDesc, astroStartDate, 1)?.date;
+            const moonSetCoordinates = moonSetTime ? getMoonHorizontalCoordinates(dateToAstro(moonSetTime)) : null;
+
+            const moonCulminationTime = Astronomy.SearchHourAngle('Moon', observer, 0, astroStartDate, directionAsc).time.date;
+            const moonCulminationCoordinates = getMoonHorizontalCoordinates(dateToAstro(moonCulminationTime));
+            const moonCulminationDistance = Astronomy.Libration(moonCulminationTime).dist_km;
+            const moonCulminationDistancePercentage = moonCulminationDistance / averageMoonDistance * 100;
+
+            const moonIllumination = Astronomy.Illumination('Moon', dateToAstro(centerDate));
+            const moonIlluminationFraction = moonIllumination.phase_fraction;
+            const moonPhaseFraction = Astronomy.MoonPhase(dateToAstro(centerDate)) / 360.0;
+            const moonPhaseName = getMoonPhaseName(moonPhaseFraction);
+            const moonAge = moonPhaseFraction * 29.53;
+            const moonEmoji = getMoonPhaseEmoji(moonPhaseFraction);
+
+            const sunRiseTime = Astronomy.SearchRiseSet('Sun', observer, directionAsc, astroStartDate, 1)?.date;
+            const sunSetTime = Astronomy.SearchRiseSet('Sun', observer, directionDesc, astroStartDate, 1)?.date;
+            const sunCivilDawnTime = Astronomy.SearchAltitude('Sun', observer, directionAsc, astroStartDate, 1, -6)?.date;
+            const sunCivilDuskTime = Astronomy.SearchAltitude('Sun', observer, directionDesc, astroStartDate, 1, -6)?.date;
+            const sunNauticalDawnTime = Astronomy.SearchAltitude('Sun', observer, directionAsc, astroStartDate, 1, -12)?.date;
+            const sunNauticalDuskTime = Astronomy.SearchAltitude('Sun', observer, directionDesc, astroStartDate, 1, -12)?.date;
+            const sunAstronomicalDawnTime = Astronomy.SearchAltitude('Sun', observer, directionAsc, astroStartDate, 1, -18)?.date;
+            const sunAstronomicalDuskTime = Astronomy.SearchAltitude('Sun', observer, directionDesc, astroStartDate, 1, -18)?.date;
 
             const getSunDarknessLevel = (time) => {
-                const sunPosition = SunCalc.getPosition(time, lat, lon);
-                const altitude = sunPosition.altitude * (180 / Math.PI);
-                if (altitude < -18) return 'astronomicalNight';
-                if (altitude < -12) return 'astronomicalTwilight';
-                if (altitude < -6) return 'nauticalTwilight';
-                if (altitude < 0) return 'civilTwilight';
+                const EquatorialCoordinates = Astronomy.Equator("Sun", dateToAstro(time), observer, true, true);
+                const HorizontalCoordinates = Astronomy.Horizon(dateToAstro(time), observer, EquatorialCoordinates.ra, EquatorialCoordinates.dec);
+                if (HorizontalCoordinates.altitude < -18) return 'astronomicalNight';
+                if (HorizontalCoordinates.altitude < -12) return 'astronomicalTwilight';
+                if (HorizontalCoordinates.altitude < -6) return 'nauticalTwilight';
+                if (HorizontalCoordinates.altitude < 0) return 'civilTwilight';
                 return 'day';
             };
 
             const getMoonIsVisible = (time) => {
-                const moonPosition = SunCalc.getMoonPosition(time, lat, lon);
-                const altitude = moonPosition.altitude * (180 / Math.PI);
-                if (altitude < 0) return false;
+                if (getMoonHorizontalCoordinates(time).altitude < 0) return false;
                 return true
             }
 
             const rowData = {
                 startDate,
                 endDate,
+                centerDate,
                 moonRiseTime,
+                moonRiseCoordinates,
                 moonSetTime,
-                moonHighestTime,
-                moonData,
-                moonIllumination,
-                moonRiseData,
-                moonSetData,
-                moonDistancePercentage,
-                moonEmoji,
+                moonSetCoordinates,
+                moonCulminationTime,
+                moonCulminationCoordinates,
+                moonCulminationDistance,
+                moonCulminationDistancePercentage,
+                moonIlluminationFraction,
+                moonPhaseFraction,
+                moonPhaseName,
                 moonAge,
-                sunRiseTime,
+                moonEmoji,
                 sunSetTime,
-                sunDawnTime,
-                sunDuskTime,
-                sunNightTime,
-                sunNightEndTime,
+                sunCivilDawnTime,
+                sunCivilDuskTime,
+                sunNauticalDawnTime,
+                sunNauticalDuskTime,
+                sunAstronomicalDawnTime,
+                sunAstronomicalDuskTime,
                 getSunDarknessLevel,
                 getMoonIsVisible,
             }
@@ -575,14 +602,14 @@
                 const startElement = document.createElement('div');
                 startElement.className = 'inline-indicator';
                 if (start > rowData.startDate) {
-                    startElement.textContent = formatDate(rowData.sunNightTime, 'HH:mm');
+                    startElement.textContent = formatDate(rowData.sunAstronomicalDuskTime, 'HH:mm');
                 }
                 segment.appendChild(startElement);
 
                 const endElement = document.createElement('div');
                 endElement.className = 'inline-indicator';
                 if (end < rowData.endDate) {
-                    endElement.textContent = formatDate(rowData.sunNightEndTime, 'HH:mm');
+                    endElement.textContent = formatDate(rowData.sunAstronomicalDawnTime, 'HH:mm');
                 }
                 segment.appendChild(endElement);
             }
@@ -593,7 +620,7 @@
             const segment = document.createElement('div');
             segment.className = 'moon-segment';
             segment.style.width = getWidth(start, end);
-            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonIllumination.fraction);
+            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonIlluminationFraction);
 
             if (!isVisible) {
                 const startElement = document.createElement('div');
@@ -730,12 +757,6 @@
             return bar;
         };
 
-        const getCompassDirection = (azimuthDegrees) => {
-            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-            const index = Math.round(azimuthDegrees / 22.5) % 16;
-            return directions[index];
-        };
-
         const createDetailSection = (rowData) => {
             const detailSection = document.createElement('div');
             detailSection.className = 'day-detail';
@@ -752,49 +773,45 @@
                     </tr>
                     <tr>
                         <td>Civil Darkness</td>
-                        <td>${formatDate(rowData.sunSetTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunRiseTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDuration(rowData.sunSetTime, rowData.sunRiseTime)}</td>
+                        <td>${formatDate(rowData.sunCivilDuskTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunCivilDawnTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunCivilDuskTime, rowData.sunCivilDawnTime)}</td>
                     </tr>
                     <tr>
                         <td>Nautical Darkness</td>
-                        <td>${formatDate(rowData.sunDuskTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunDawnTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDuration(rowData.sunDuskTime, rowData.sunDawnTime)}</td>
+                        <td>${formatDate(rowData.sunNauticalDuskTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunNauticalDawnTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunNauticalDuskTime, rowData.sunNauticalDawnTime)}</td>
                     </tr>
                     <tr>
                         <td>Astronomical Darkness</td>
-                        <td>${formatDate(rowData.sunNightTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDate(rowData.sunNightEndTime, 'YYYY-MM-DD HH:mm:ss')}</td>
-                        <td>${formatDuration(rowData.sunNightTime, rowData.sunNightEndTime)}</td>
+                        <td>${formatDate(rowData.sunAstronomicalDuskTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDate(rowData.sunAstronomicalDawnTime, 'YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${formatDuration(rowData.sunAstronomicalDuskTime, rowData.sunAstronomicalDawnTime)}</td>
                     </tr>
                 </table>
                 
                 <h4>Moon Information</h4>
                 <table class="detail-table">
                     <tr>
-                        <td>Moon Phase (at highest)</td>
-                        <td>${rowData.moonIllumination.phase.name} (${(rowData.moonIllumination.fraction * 100).toFixed(1)}% illuminated, Age: ${rowData.moonAge.toFixed(0)} days)</td>
+                        <td>Moon Phase</td>
+                        <td>${formatDate(rowData.centerDate, 'YYYY-MM-DD HH:mm:ss')} ${rowData.moonPhaseName} (${(rowData.moonIlluminationFraction * 100).toFixed(1)}% illuminated, Age: ${rowData.moonAge.toFixed(0)} days)</td>
                     </tr>
                     <tr>
                         <td>Moonrise</td>
-                        <td>${rowData.moonRiseTime ? formatDate(rowData.moonRiseTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonRiseData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonRiseData.azimuthDegrees)})</td>
+                        <td>${formatDate(rowData.moonRiseTime, 'YYYY-MM-DD HH:mm:ss')} (Azimuth ${formatDegrees(rowData.moonRiseCoordinates?.azimuth)} ${getCompassDirection(rowData.moonRiseCoordinates?.azimuth)}, Altitude ${formatDegrees(rowData.moonRiseCoordinates?.altitude)})</td>
                     </tr>
                     <tr>
-                        <td>Moon Highest</td>
-                        <td>${rowData.moonHighestTime ? formatDate(rowData.moonHighestTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonData.azimuthDegrees)}, Altitude ${rowData.moonData.altitudeDegrees.toFixed(1)}°)</td>
+                        <td>Moon Culmination</td>
+                        <td>${formatDate(rowData.moonCulminationTime, 'YYYY-MM-DD HH:mm:ss')} (Azimuth ${formatDegrees(rowData.moonCulminationCoordinates.azimuth)} ${getCompassDirection(rowData.moonCulminationCoordinates.azimuth)}, Altitude ${formatDegrees(rowData.moonCulminationCoordinates.altitude)})</td>
                     </tr>
                     <tr>
                         <td>Moonset</td>
-                        <td>${rowData.moonSetTime ? formatDate(rowData.moonSetTime, 'YYYY-MM-DD HH:mm:ss') : 'N/A'} (Azimuth ${rowData.moonSetData.azimuthDegrees.toFixed(1)}° ${getCompassDirection(rowData.moonSetData.azimuthDegrees)})</td>
+                        <td>${formatDate(rowData.moonSetTime, 'YYYY-MM-DD HH:mm:ss')} (Azimuth ${formatDegrees(rowData.moonSetCoordinates?.azimuth)} ${getCompassDirection(rowData.moonSetCoordinates?.azimuth)}, Altitude ${formatDegrees(rowData.moonSetCoordinates?.altitude)})</td>
                     </tr>
                     <tr>
                         <td>Moon Distance</td>
-                        <td>${rowData.moonData.distance.toFixed(0)} km (${rowData.moonDistancePercentage.toFixed(2)}% of average)</td>
-                    </tr>
-                    <tr>
-                        <td>Moon Parallactic Angle</td>
-                        <td>${rowData.moonData.parallacticAngleDegrees.toFixed(1)}°</td>
+                        <td>${rowData.moonCulminationDistance.toFixed(0)} km (${rowData.moonCulminationDistancePercentage.toFixed(2)}% of average)</td>
                     </tr>
                 </table>
             `;
@@ -818,7 +835,7 @@
                 </div>
                 <div class="moon-info">
                     <span class="moon-icon">${rowData.moonEmoji}</span>
-                    <span>${(rowData.moonIllumination.fraction * 100).toFixed(0)}%</span>
+                    <span>${(rowData.moonIlluminationFraction * 100).toFixed(0)}%</span>
                 </div>
             `;
             dayRow.appendChild(dayLeft);
@@ -949,18 +966,13 @@
             const start = new Date(startDate);
             start.setHours(12, 0, 0, 0);
 
-            try {
-                for (let day = 0; day < numDays; day++) {
-                    const date = addDays(start, day);
-                    const dayRow = createDayRow(date, lat, lon);
-                    calendarView.appendChild(dayRow);
-                }
-
-                calendarView.appendChild(createHourLabels());
-            } catch (error) {
-                console.error('Error generating calendar:', error);
-                alert('An error occurred while generating the calendar. Please try again.');
+            for (let day = 0; day < numDays; day++) {
+                const date = addDays(start, day);
+                const dayRow = createDayRow(date, lat, lon);
+                calendarView.appendChild(dayRow);
             }
+
+            calendarView.appendChild(createHourLabels());
         };
 
         const toggleInlineTimes = () => {
