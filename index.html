@@ -395,12 +395,11 @@
                 <h3>Moon Information</h3>
                 <p>The moon information includes several key details:</p>
                 <ul>
-                    <li><strong>Moon Phase:</strong> Represented as a a percentage of illumination. This directly affects the moon's brightness.</li>
-                    <li><strong>Moonrise and Moonset:</strong> Times when the moon rises and sets, including azimuth angles and compass directions.</li>
-                    <li><strong>Moon Altitude and Azimuth:</strong> The moon's height above the horizon and its direction in degrees from north.</li>
-                    <li><strong>Moon Distance:</strong> The distance from Earth to the moon, with a percentage difference from the average distance of 384,400 km.</li>
-                    <li><strong>Moon Parallactic Angle:</strong> The angle between the zenith and the pole of the ecliptic, as seen from the moon.</li>
-                    <li><strong>Moon Illumination Angle:</strong> The angle of the moon's illumination.</li>
+                    <li><strong>Moon Phase:</strong> The current phase name, illumination percentage, and moon age in days (based on the 29.53-day lunar cycle).</li>
+                    <li><strong>Moonrise:</strong> Rise time is when the moon first starts to be visible above the horizon, including its azimuth (direction) and altitude.</li>
+                    <li><strong>Moon Culmination:</strong> Time when the moon reaches its highest point in the sky, including azimuth and altitude.</li>
+                    <li><strong>Moonset:</strong> Set time is the moment when the moon appears to vanish below the horizon, including its azimuth and altitude.</li>
+                    <li><strong>Moon Distance:</strong> The distance between Earth and moon in kilometers, with a percentage comparison to the average distance (384,400 km).</li>
                 </ul>
                 <p>The visual representation in this calendar uses a grayscale gradient to indicate moon brightness, with darker shades representing a less bright moon and lighter shades a brighter moon. The moon is considered "invisible" when it's below the horizon, which is calculated based on the moon's altitude being negative.</p>
                 <p>Note: Actual visibility can be affected by local conditions such as weather, light pollution, and the observer's dark adaptation, which are not accounted for in these calculations.</p>
@@ -416,6 +415,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
+                    <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
                     <li><strong>Version 2.1</strong> (26.10.2024): Added date to moon times, added moon age. Removed moon illumination angle.</li>
                     <li><strong>Version 2.0</strong> (24.10.2024): Rewrite. Added inline-times, hour-lines, overlap-bar, and replace tooltips with a daily detail section.</li>
                     <li><strong>Version 1.2</strong> (20.10.2024): Added gradient for moon illumination.</li>
@@ -425,7 +425,6 @@
             </section>
         </main>
     </div>
-    <!-- Replace the SunCalc3 script with astronomy.browser -->
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.17/astronomy.browser.js"></script>
     <script type="module">
         const $ = (selector) => document.querySelector(selector);
@@ -524,10 +523,11 @@
             const moonCulminationTime = Astronomy.SearchHourAngle('Moon', observer, 0, astroStartDate, directionAsc).time.date;
             const moonCulminationCoordinates = getMoonHorizontalCoordinates(dateToAstro(moonCulminationTime));
             const moonCulminationDistance = Astronomy.Libration(moonCulminationTime).dist_km;
-            const moonCulminationDistancePercentage = moonCulminationDistance / averageMoonDistance + 100;
+            const moonCulminationDistancePercentage = moonCulminationDistance / averageMoonDistance * 100;
 
             const moonIllumination = Astronomy.Illumination('Moon', dateToAstro(centerDate));
-            const moonPhaseFraction = Astronomy.MoonPhase(dateToAstro(moonCulminationTime)) / 360.0;
+            const moonIlluminationFraction = moonIllumination.phase_fraction;
+            const moonPhaseFraction = Astronomy.MoonPhase(dateToAstro(centerDate)) / 360.0;
             const moonPhaseName = getMoonPhaseName(moonPhaseFraction);
             const moonAge = moonPhaseFraction * 29.53;
             const moonEmoji = getMoonPhaseEmoji(moonPhaseFraction);
@@ -568,7 +568,7 @@
                 moonCulminationCoordinates,
                 moonCulminationDistance,
                 moonCulminationDistancePercentage,
-                moonIllumination,
+                moonIlluminationFraction,
                 moonPhaseFraction,
                 moonPhaseName,
                 moonAge,
@@ -620,7 +620,7 @@
             const segment = document.createElement('div');
             segment.className = 'moon-segment';
             segment.style.width = getWidth(start, end);
-            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonIllumination.phase_fraction);
+            segment.style.backgroundColor = getMoonSegmentColor(isVisible, rowData.moonIlluminationFraction);
 
             if (!isVisible) {
                 const startElement = document.createElement('div');
@@ -795,7 +795,7 @@
                 <table class="detail-table">
                     <tr>
                         <td>Moon Phase</td>
-                        <td>${formatDate(rowData.centerDate, 'YYYY-MM-DD HH:mm:ss')} ${rowData.moonPhaseName} (${(rowData.moonIllumination.phase_fraction * 100).toFixed(1)}% illuminated, Age: ${rowData.moonAge.toFixed(0)} days)</td>
+                        <td>${formatDate(rowData.centerDate, 'YYYY-MM-DD HH:mm:ss')} ${rowData.moonPhaseName} (${(rowData.moonIlluminationFraction * 100).toFixed(1)}% illuminated, Age: ${rowData.moonAge.toFixed(0)} days)</td>
                     </tr>
                     <tr>
                         <td>Moonrise</td>
@@ -812,10 +812,6 @@
                     <tr>
                         <td>Moon Distance</td>
                         <td>${rowData.moonCulminationDistance.toFixed(0)} km (${rowData.moonCulminationDistancePercentage.toFixed(2)}% of average)</td>
-                    </tr>
-                    <tr>
-                        <td>Moon Parallactic Angle</td>
-                        <td>TODO°</td>
                     </tr>
                 </table>
             `;
@@ -839,7 +835,7 @@
                 </div>
                 <div class="moon-info">
                     <span class="moon-icon">${rowData.moonEmoji}</span>
-                    <span>${(rowData.moonIllumination.phase_fraction * 100).toFixed(0)}%</span>
+                    <span>${(rowData.moonIlluminationFraction * 100).toFixed(0)}%</span>
                 </div>
             `;
             dayRow.appendChild(dayLeft);
@@ -970,18 +966,6 @@
             const start = new Date(startDate);
             start.setHours(12, 0, 0, 0);
 
-            // try {
-            //     for (let day = 0; day < numDays; day++) {
-            //         const date = addDays(start, day);
-            //         const dayRow = createDayRow(date, lat, lon);
-            //         calendarView.appendChild(dayRow);
-            //     }
-
-            //     calendarView.appendChild(createHourLabels());
-            // } catch (error) {
-            //     console.error('Error generating calendar:', error);
-            //     alert('An error occurred while generating the calendar. Please try again.');
-            // }
             for (let day = 0; day < numDays; day++) {
                 const date = addDays(start, day);
                 const dayRow = createDayRow(date, lat, lon);
