@@ -204,6 +204,13 @@
             overflow: hidden;
             display: none;
         }
+        .inline-altitude {
+            font-size: 0.7em;
+            display: none;
+            width: 100%;
+            justify-content: center;
+            color: rgba(0, 0, 0, 0.5);
+        }
         .date-info, .moon-info {
             display: flex;
             flex-direction: column;
@@ -219,6 +226,10 @@
         .day-row:hover .inline-indicator {
             display: inline;
         }
+        .show-inline-altitude .inline-altitude,
+        .day-row:hover .inline-altitude {
+            display: flex;
+        }
         .hour-line {
             position: absolute;
             top: 0;
@@ -231,6 +242,9 @@
         .show-hour-lines .hour-line,
         .day-row:hover .hour-line {
             display: block;
+        }
+        .show-inline-altitude .inline-altitude {
+            display: flex;
         }
         .day-detail {
             display: none;
@@ -359,6 +373,9 @@
                     <label for="show-hour-lines">
                         <input type="checkbox" id="show-hour-lines"> Show hour lines
                     </label>
+                    <label for="show-inline-altitude">
+                        <input type="checkbox" id="show-inline-altitude"> Show max Moon altitude
+                    </label>
                 </div>
             </div>
             <section id="calendar-view" aria-live="polite">
@@ -379,6 +396,7 @@
                     <li>Click on a day row to see detailed information for that night.</li>
                     <li>Use the "Show inline times" option to display key times directly on the bars.</li>
                     <li>Use the "Show hour lines" option to display vertical hour markers.</li>
+                    <li>Use the "Show max Moon altitude" option to display the Moon's maximum altitude for that night.</li>
                 </ol>
 
                 <h3>Darkness Levels</h3>
@@ -415,6 +433,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
+                    <li><strong>Version 2.3</strong> (02.11.2024): Added max Moon altitude as inline text.</li>
                     <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
                     <li><strong>Version 2.1</strong> (26.10.2024): Added date to moon times, added moon age. Removed moon illumination angle.</li>
                     <li><strong>Version 2.0</strong> (24.10.2024): Rewrite. Added inline-times, hour-lines, overlap-bar, and replace tooltips with a daily detail section.</li>
@@ -636,6 +655,11 @@
                     endElement.textContent = formatDate(rowData.moonRiseTime, 'HH:mm');
                 }
                 segment.appendChild(endElement);
+            } else {
+                const altitudeElement = document.createElement('div');
+                altitudeElement.className = 'inline-altitude';
+                altitudeElement.textContent = formatDegrees(rowData.moonCulminationCoordinates.altitude);
+                segment.appendChild(altitudeElement);
             }
 
             return segment;
@@ -983,6 +1007,10 @@
             document.body.classList.toggle('show-hour-lines', $('#show-hour-lines').checked);
         };
 
+        const toggleInlineAltitude = () => {
+            document.body.classList.toggle('show-inline-altitude', $('#show-inline-altitude').checked);
+        };
+
         const debounce = (func, delay) => {
             let timeoutId;
             return (...args) => {
@@ -1029,6 +1057,7 @@
 
             $('#show-inline-times').addEventListener('change', toggleInlineTimes);
             $('#show-hour-lines').addEventListener('change', toggleHourLines);
+            $('#show-inline-altitude').addEventListener('change', toggleInlineAltitude);
         });
     </script>
 </body>
