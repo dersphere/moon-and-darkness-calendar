@@ -433,7 +433,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
-                    <li><strong>Version 2.3</strong> (02.11.2024): Added max Moon altitude as inline text.</li>
+                    <li><strong>Version 2.3</strong> (02.11.2024): Added max Moon altitude as inline text, save options in localStorage.</li>
                     <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
                     <li><strong>Version 2.1</strong> (26.10.2024): Added date to moon times, added moon age. Removed moon illumination angle.</li>
                     <li><strong>Version 2.0</strong> (24.10.2024): Rewrite. Added inline-times, hour-lines, overlap-bar, and replace tooltips with a daily detail section.</li>
@@ -1000,15 +1000,35 @@
         };
 
         const toggleInlineTimes = () => {
-            document.body.classList.toggle('show-inline-times', $('#show-inline-times').checked);
+            const checked = $('#show-inline-times').checked;
+            document.body.classList.toggle('show-inline-times', checked);
+            localStorage.setItem('show-inline-times', checked.toString());
         };
 
         const toggleHourLines = () => {
-            document.body.classList.toggle('show-hour-lines', $('#show-hour-lines').checked);
+            const checked = $('#show-hour-lines').checked;
+            document.body.classList.toggle('show-hour-lines', checked);
+            localStorage.setItem('show-hour-lines', checked.toString());
         };
 
         const toggleInlineAltitude = () => {
-            document.body.classList.toggle('show-inline-altitude', $('#show-inline-altitude').checked);
+            const checked = $('#show-inline-altitude').checked;
+            document.body.classList.toggle('show-inline-altitude', checked);
+            localStorage.setItem('show-inline-altitude', checked.toString());
+        };
+
+        const loadStoredPreferences = () => {
+            const showInlineTimes = localStorage.getItem('show-inline-times') === 'true';
+            const showHourLines = localStorage.getItem('show-hour-lines') === 'true';
+            const showInlineAltitude = localStorage.getItem('show-inline-altitude') === 'true';
+
+            $('#show-inline-times').checked = showInlineTimes;
+            $('#show-hour-lines').checked = showHourLines;
+            $('#show-inline-altitude').checked = showInlineAltitude;
+
+            document.body.classList.toggle('show-inline-times', showInlineTimes);
+            document.body.classList.toggle('show-hour-lines', showHourLines);
+            document.body.classList.toggle('show-inline-altitude', showInlineAltitude);
         };
 
         const debounce = (func, delay) => {
@@ -1022,6 +1042,8 @@
         const debouncedGenerateCalendar = debounce(generateCalendar, 300);
 
         document.addEventListener('DOMContentLoaded', async () => {
+            loadStoredPreferences();
+
             const params = getUrlParams();
             const lat = params.get('lat');
             const lon = params.get('lon');
