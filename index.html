@@ -209,7 +209,6 @@
             display: none;
             width: 100%;
             justify-content: center;
-            color: rgba(0, 0, 0, 0.5);
         }
         .date-info, .moon-info {
             display: flex;
@@ -386,7 +385,7 @@
                 
                 <h3>About</h3>
                 <p>This Moon and Darkness Calendar is designed to help astronomers, astrophotographers, and night sky enthusiasts plan their observations. It provides a visual representation of darkness levels and moon phases, helping users identify optimal times for various types of night sky activities.</p>
-                <p>Each day-row focuses on a <b>night</b>, which is defined as a 24h period from 12:00 (noon) to 12:00 on the next day, while most other tools/tables/websites use a calendar-days, so a 24h period from 00:00 to 24:00.</p>
+                <p>Each day-row focuses on a <b>night</b>, which is defined as a 24h period from 12:00 (noon) to 12:00 on the next day, while most other tools/tables/websites use calendar-days, so a 24h period from 00:00 to 24:00.</p>
 
                 <h3>Using the Calendar</h3>
                 <ol>
@@ -658,6 +657,11 @@
             } else {
                 const altitudeElement = document.createElement('div');
                 altitudeElement.className = 'inline-altitude';
+                if (rowData.moonCulminationCoordinates.altitude < 20) {
+                    altitudeElement.style.color = 'rgba(255, 255, 255, 1)';
+                } else {
+                    altitudeElement.style.color = 'rgba(0, 0, 0, 1)';
+                }
                 altitudeElement.textContent = formatDegrees(rowData.moonCulminationCoordinates.altitude);
                 segment.appendChild(altitudeElement);
             }
