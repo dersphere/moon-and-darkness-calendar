@@ -234,9 +234,16 @@
             top: 0;
             bottom: 0;
             width: 1px;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
             pointer-events: none;
             display: none;
+        }
+        .hour-line.major {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .hour-line.midnight {
+            background-color: rgba(255, 255, 255, 0.2);
+            width: 2px;
         }
         .show-hour-lines .hour-line,
         .day-row:hover .hour-line {
@@ -432,6 +439,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
+                    <li><strong>Version 2.4</strong> (12.11.2024): Visually highlight midnight and major hour lines.</li>
                     <li><strong>Version 2.3</strong> (02.11.2024): Added max Moon altitude as inline text, save options in localStorage.</li>
                     <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
                     <li><strong>Version 2.1</strong> (26.10.2024): Added date to moon times, added moon age. Removed moon illumination angle.</li>
@@ -877,6 +885,12 @@
             for (let hour = 0; hour <= 24; hour++) {
                 const line = document.createElement('div');
                 line.className = 'hour-line';
+                if (hour === 12) {
+                    line.classList.add('midnight');
+                }
+                else if (hour % 3 === 0) {
+                    line.classList.add('major');
+                }
                 line.style.left = `${(hour / 24) * 100}%`;
                 barsContainer.appendChild(line);
             }
