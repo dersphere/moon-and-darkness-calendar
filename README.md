@@ -22,12 +22,6 @@ The Moon and Darkness Calendar is a web application designed to help astronomers
 
 If you have any suggestions, feature requests, or encounter any issues, please don't hesitate to reach out. You can contact me via astro@dersphere.de
 
-## Changelog
-
-- **Version 2.0** (24.20.2024): Rewrite. Added inline-times, hour-lines, overlap-bar, and replaced tooltips with a daily detail section.
-- **Version 1.2** (20.10.2024): Added gradient for moon illumination.
-- **Version 1.1** (19.10.2024): Added tooltip with times for darkness and moon visibility.
-- **Version 1.0** (19.10.2024): Initial release with basic darkness and moon phase calendar functionality.
 
 ## License
 

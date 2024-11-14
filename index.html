@@ -46,6 +46,11 @@
             font-size: 2.5em;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
+        #location-info {
+            display: none;
+            text-align: center;
+            font-size: 20px;
+        }
 
         /* Controls Section Styles */
         .controls {
@@ -349,12 +354,46 @@
                 min-width: 0;
             }
         }
+
+        @media print {
+            body {
+                zoom: 50%;
+                background: none !important;
+                background-color: #203a43 !important;
+            }
+            .controls,
+            #help-details,
+            button {
+                display: none !important;
+            }
+            #location-info {
+                display: block !important;
+            }
+
+            #app {
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 50px 0 50px !important;
+            }
+
+            #calendar-view, #app {
+                background: none !important;
+                box-shadow: none !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                text-shadow: none !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <header>
             <h1>Moon and Darkness Calendar</h1>
+            <p id="location-info"></p>
         </header>
         <main>
             <div class="controls">
@@ -382,6 +421,7 @@
                     <label for="show-inline-altitude">
                         <input type="checkbox" id="show-inline-altitude"> Show max Moon altitude
                     </label>
+                    <button type="button" id="print-button">Print</button>
                 </div>
             </div>
             <section id="calendar-view" aria-live="polite">
@@ -439,6 +479,7 @@
 
                 <h3>Changelog</h3>
                 <ul>
+                    <li><strong>Version 2.5</strong> (14.11.2024): Add print button and layout for print and saving as PDF.</li>
                     <li><strong>Version 2.4</strong> (12.11.2024): Visually highlight midnight and major hour lines.</li>
                     <li><strong>Version 2.3</strong> (02.11.2024): Added max Moon altitude as inline text, save options in localStorage.</li>
                     <li><strong>Version 2.2</strong> (28.10.2024): Switch to astronomy.browser as the underlying library for more precise moon calculations.</li>
@@ -939,6 +980,7 @@
             const locationName = await reverseGeocode(lat, lon);
             if (locationName) {
                 $('#location').value = locationName;
+                $('#location-info').textContent = locationName;
             }
         };
 
@@ -1098,6 +1140,9 @@
             $('#show-inline-times').addEventListener('change', toggleInlineTimes);
             $('#show-hour-lines').addEventListener('change', toggleHourLines);
             $('#show-inline-altitude').addEventListener('change', toggleInlineAltitude);
+            $('#print-button').addEventListener('click', () => {
+                window.print();
+            });
         });
     </script>
 </body>
