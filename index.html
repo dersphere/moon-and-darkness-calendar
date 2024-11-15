@@ -959,12 +959,17 @@
         };
 
         const reverseGeocode = async (lat, lon) => {
+            const cachedLocation = localStorage.getItem(`location-${lat}-${lon}`);
+            if (cachedLocation) {
+                return cachedLocation;
+            }
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                localStorage.setItem(`location-${lat}-${lon}`, data.display_name);
                 return data.display_name;
             } catch (error) {
                 console.error('Error reverse geocoding:', error);
